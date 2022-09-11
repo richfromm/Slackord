@@ -48,23 +48,26 @@ class DiscordClient(discord.Client):
         logger.info(f"Ready. Posting messages to channel id {self.channel_id}")
         if self.verbose:
             pprint(self.parsed_messages)
-        channel = self.get_channel(self.channel_id)
-        if not channel:
-            logger.error(f"Unable to get channel with id {self.channel_id}")
+
+        try:
+            channel = self.get_channel(self.channel_id)
+            if not channel:
+                logger.error(f"Unable to get channel with id {self.channel_id}")
+                logger.warn("Will NOT be able to post messages")
+                return
+
+            for timestamp in sorted(self.parsed_messages.keys()):
+                (message, thread) = self.parsed_messages[timestamp]
+                sent_message = await channel.send(message)
+                logger.info(f"Message posted: {timestamp}")
+
+                if thread:
+                    created_thread = await sent_message.create_thread(name=f"thread{timestamp}")
+                    for timestamp_in_thread in sorted(thread.keys()):
+                        thread_message = thread[timestamp_in_thread]
+                        await created_thread.send(thread_message)
+                        logger.info(f"Message in thread posted: {timestamp_in_thread}")
+
+            logger.info("Done posting messages")
+        finally:
             await self.close()
-
-        for timestamp in sorted(self.parsed_messages.keys()):
-            (message, thread) = self.parsed_messages[timestamp]
-            sent_message = await channel.send(message)
-            logger.info(f"Message posted: {timestamp}")
-
-            if thread:
-                created_thread = await sent_message.create_thread(name=f"thread{timestamp}")
-                for timestamp_in_thread in sorted(thread.keys()):
-                    thread_message = thread[timestamp_in_thread]
-                    await created_thread.send(thread_message)
-                    logger.info(f"Message in thread posted: {timestamp_in_thread}")
-
-        await self.close()
-
-        logger.info("Done posting messages")

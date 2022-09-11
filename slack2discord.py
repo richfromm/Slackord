@@ -42,5 +42,5 @@ if __name__ == '__main__':
     client.run(token)
 
     # XXX return values of asyncio functions are tricky, don't worry about it for now
-    logger.info("Discord import complete (may or may not have been successful)")
+    logger.info("Discord import from Slack export complete (may or may not have been successful)")
     exit(0)
