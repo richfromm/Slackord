@@ -1,5 +1,10 @@
-import discord
 import asyncio
+import logging
+
+import discord
+
+
+logger = logging.getLogger(__name__)
 
 
 # template copied from https://github.com/Rapptz/discord.py/blob/master/examples/background_task_asyncio.py
@@ -11,7 +16,7 @@ class Slack2DiscordClient(discord.Client):
         super().__init__(*args, **kwargs)
 
     async def setup_hook(self) -> None:
-        print("In setup_hook(), creating background task")
+        logger.info("In setup_hook(), creating background task")
 
         # create the background task and run it in the background to post all of the messages
         # the reason for saving bg_task even though we don't use it anywhere:
@@ -24,36 +29,31 @@ class Slack2DiscordClient(discord.Client):
         self.bg_task = self.loop.create_task(self.post_messages())
 
     async def on_ready(self):
-        print(f'Logged in as {self.user} (ID: {self.user.id})')
-        print('------')
+        logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
 
     async def post_messages(self):
-        print("Waiting until ready")
+        logger.info("Waiting until ready")
         await self.wait_until_ready()
-        print(f"Ready. Posting messages to channel id {self.channel_id}")
+        logger.info(f"Ready. Posting messages to channel id {self.channel_id}")
         if self.verbose:
             pprint(parsed_messages)
         channel = self.get_channel(self.channel_id)
         if not channel:
-            #logger.error(f"Unable to get channel with id {self.channel_id}")
-            print(f"ERROR: Unable to get channel with id {self.channel_id}")
+            logger.error(f"Unable to get channel with id {self.channel_id}")
             await self.close()
 
         for timestamp in sorted(self.parsed_messages.keys()):
             (message, thread) = self.parsed_messages[timestamp]
             sent_message = await channel.send(message)
-            #logger.info(f"Message posted: {timestamp}")
-            print(f"Message posted: {timestamp}")
+            logger.info(f"Message posted: {timestamp}")
 
             if thread:
                 created_thread = await sent_message.create_thread(name=f"thread{timestamp}")
                 for timestamp_in_thread in sorted(thread.keys()):
                     thread_message = thread[timestamp_in_thread]
                     await created_thread.send(thread_message)
-                    #logger.info(f"Message in thread posted: {timestamp_in_thread}")
-                    print(f"Message in thread posted: {timestamp_in_thread}")
+                    logger.info(f"Message in thread posted: {timestamp_in_thread}")
 
         await self.close()
 
-        #logger.info("Done posting messages")
-        print("Done posting messages")
+        logger.info("Done posting messages")
