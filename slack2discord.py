@@ -14,15 +14,20 @@ from sys import argv, exit
 import time
 
 
+#from slack2discord.client import Slack2DiscordClient
+#from .client import Slack2DiscordClient
+#from . import Slack2DiscordClient
+import client
+
 logger = logging.getLogger('slack2discord')
 
 
-# XXX bot needs to be scoped at the top level to use the `@bot.command` annotation
-#     so this can *not* move to with start_bot()
-intents = discord.Intents.default()
-intents.messages = True
-intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+# # XXX bot needs to be scoped at the top level to use the `@bot.command` annotation
+# #     so this can *not* move to with start_bot()
+# intents = discord.Intents.default()
+# intents.messages = True
+# intents.message_content = True
+# bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 def format_time(timestamp):
@@ -50,15 +55,15 @@ def format_message(timestamp, real_name, message):
         return f"`{format_time(timestamp)}{message_sep}{message}"
 
 
-def start_bot(token):
-    # TODO: Thread this process with bot.start().
-    # XXX the bot is functional, but the script waits indefinitely after entering the token and doesn't just exit
-    #     which is somewhat intentional and the nature of the bot
-    #     but maybe a bot isn't the best match for a CLI script to do a single import
-    #
-    # Normally this sets up logging automatically.
-    # But we have already set up logging manually, so disable that here.
-    bot.run(token, log_handler=None)
+# def start_bot(token):
+#     # TODO: Thread this process with bot.start().
+#     # XXX the bot is functional, but the script waits indefinitely after entering the token and doesn't just exit
+#     #     which is somewhat intentional and the nature of the bot
+#     #     but maybe a bot isn't the best match for a CLI script to do a single import
+#     #
+#     # Normally this sets up logging automatically.
+#     # But we have already set up logging manually, so disable that here.
+#     bot.run(token, log_handler=None)
 
 
 def parse_json_slack_export(filename):
@@ -104,6 +109,8 @@ def parse_json_slack_export(filename):
                 else:
                     # this is not associated with a thread at all
                     parsed_messages[timestamp] = (full_message_text, None)
+
+    logger.info("Messages from Slack export successfully parsed.")
     return parsed_messages
 
 
@@ -113,8 +120,7 @@ def output_messages(parsed_messages, verbose):
     """
     verbose_substr = " the following" if verbose else " "
     logger.info(f"Slackord will post{verbose_substr}{len(parsed_messages)} messages"
-                " (plus thread contents if applicable) to your desired Discord channel"
-                " when you type \'!slackord\' in that channel")
+                " (plus thread contents if applicable) to your desired Discord channel")
     if not verbose:
         return
 
@@ -127,33 +133,14 @@ def output_messages(parsed_messages, verbose):
                 logger.info(f"\t{thread_message}")
 
 
-@bot.command(pass_context=True)
-async def slackord(ctx):
+def post_to_discord(token, channel_id, parsed_messages, verbose):
     """
-    When !slackord is typed in a channel, iterate through the results of previously parsing the
-    JSON file and post each message. Threading is preserved.
+    Iterate through the results of previously parsing the JSON file from a Slack export and post
+    each message to Discord in the channel corresponding to the given id. Threading is preserved.
     """
-    # XXX somehow this function has access to parsed_messages and verbose, I'm not quite sure how
-    logger.info('Posting messages into Discord!')
-    if verbose:
-        pprint(parsed_messages)
-    for timestamp in sorted(parsed_messages.keys()):
-        (message, thread) = parsed_messages[timestamp]
-        sent_message = await ctx.send(message)
-        logger.info(f"Message posted: {timestamp}")
-
-        if thread:
-            created_thread = await sent_message.create_thread(name=f"thread{timestamp}")
-            for timestamp_in_thread in sorted(thread.keys()):
-                thread_message = thread[timestamp_in_thread]
-                await created_thread.send(thread_message)
-                logger.info(f"Message in thread posted: {timestamp_in_thread}")
-
-    # XXXX at this point the bot will just wait
-    # but as a CLI script, that's not really the best model, as we really are done
-    # and if we want to do another import, we'd re-run the script
-    logger.info("Done posting messages")
-    logger.info("Ctrl-C to quit")
+    discord_client = client.Slack2DiscordClient(channel_id, parsed_messages, verbose, intents=discord.Intents.default())
+    # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
+    discord_client.run(token)
 
 
 if __name__ == '__main__':
@@ -163,23 +150,22 @@ if __name__ == '__main__':
     discord.utils.setup_logging(root=True)
 
     # XXX eventually do real arg parsing
-    if len(argv) != 3:
-        print(f"Usage {argv[0]} <token> <filename>")
+    if len(argv) != 4:
+        print(f"Usage {argv[0]} <token> <filename> <channel_id>")
         exit(1)
 
     token = argv[1]
     filename = argv[2]
+    channel_id = int(argv[3])
     # XXX this should be an arg, for now just edit here
     verbose = False
 
     parsed_messages = parse_json_slack_export(filename)
     output_messages(parsed_messages, verbose)
-
-    logger.info("Messages from Slack export successfully parsed.")
-    logger.info("Type \'!slackord\' into a Discord channel to import.")
-    start_bot(token)
-
-    # XXX we will only get here via Ctrl-C
-    #     but we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
-    logger.info("Discord import successful.")
+    #logger.info("Messages from Slack export successfully parsed.")
+    #logger.info("Type \'!slackord\' into a Discord channel to import.")
+    #start_bot(token)
+    post_to_discord(token, channel_id, parsed_messages, verbose)
+    # XXX return values of asyncio functions are tricky, don't worry about it for now
+    logger.info("Discord import complete (may or may not have been successful)")
     exit(0)
