@@ -17,15 +17,6 @@ from slack2discord.parser import SlackParser
 logger = logging.getLogger('slack2discord')
 
 
-def post_to_discord(token, channel_id, parsed_messages, verbose):
-    """
-    Iterate through the results of previously parsing the JSON file from a Slack export and post
-    each message to Discord in the channel corresponding to the given id. Threading is preserved.
-    """
-    client = DiscordClient(channel_id, parsed_messages, verbose)
-    # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
-    client.run(token)
-
 if __name__ == '__main__':
     # Normally logging gets set up automatically when discord.Client.run() is called.
     # But we want to use logging before then, with the same config.
@@ -46,7 +37,10 @@ if __name__ == '__main__':
     parser = SlackParser(verbose)
     parser.parse_json_slack_export(filename)
 
-    post_to_discord(token, channel_id, parser.parsed_messages, verbose)
+    client = DiscordClient(channel_id, parser.parsed_messages, verbose)
+    # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
+    client.run(token)
+
     # XXX return values of asyncio functions are tricky, don't worry about it for now
     logger.info("Discord import complete (may or may not have been successful)")
     exit(0)

@@ -36,9 +36,13 @@ class DiscordClient(discord.Client):
         self.bg_task = self.loop.create_task(self.post_messages())
 
     async def on_ready(self):
-        logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
+        logger.info(f"In on_ready(), logged in as {self.user} (ID: {self.user.id})")
 
     async def post_messages(self):
+        """
+        Iterate through the results of previously parsing the JSON file from a Slack export and post
+        each message to Discord in the channel corresponding to the given id. Threading is preserved.
+        """
         logger.info("Waiting until ready")
         await self.wait_until_ready()
         logger.info(f"Ready. Posting messages to channel id {self.channel_id}")
