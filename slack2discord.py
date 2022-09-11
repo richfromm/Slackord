@@ -7,9 +7,6 @@ import asyncio
 import logging
 from sys import argv, exit
 
-import discord
-from discord.ext import commands
-
 from slack2discord.client import DiscordClient
 from slack2discord.parser import SlackParser
 
