@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 
 # template copied from https://github.com/Rapptz/discord.py/blob/master/examples/background_task_asyncio.py
 class Slack2DiscordClient(discord.Client):
+    """
+    A Discord client for the purposes of importing the content of messages exported from Slack
+    *Not* intended to be generic
+    """
     def __init__(self, channel_id, parsed_messages, verbose, *args, **kwargs):
         self.channel_id = channel_id
         self.parsed_messages = parsed_messages
