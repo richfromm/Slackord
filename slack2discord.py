@@ -9,7 +9,6 @@ from discord.ext import commands
 import logging
 from sys import argv, exit
 
-
 #from slack2discord.client import Slack2DiscordClient
 #from .client import Slack2DiscordClient
 #from . import Slack2DiscordClient
@@ -30,7 +29,6 @@ def post_to_discord(token, channel_id, parsed_messages, verbose):
     discord_client = client.Slack2DiscordClient(channel_id, parsed_messages, verbose)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
     discord_client.run(token)
-
 
 if __name__ == '__main__':
     # Normally logging gets set up automatically when discord.Client.run() is called.

@@ -16,7 +16,6 @@ class SlackParser():
         self.verbose = verbose
         self.parsed_messages = dict()
 
-
     @staticmethod
     def format_time(timestamp):
         """
@@ -24,7 +23,6 @@ class SlackParser():
         format it in a useful human readable manner
         """
         return datetime.fromtimestamp(timestamp).isoformat(sep=' ', timespec='seconds')
-
 
     @staticmethod
     def format_message(timestamp, real_name, message):
@@ -42,7 +40,6 @@ class SlackParser():
             return f"`{SlackParser.format_time(timestamp)}` **{real_name}**{message_sep}{message}"
         else:
             return f"`{SlackParser.format_time(timestamp)}`{message_sep}{message}"
-
 
     def parse_json_slack_export(self, filename):
         """
@@ -89,7 +86,6 @@ class SlackParser():
 
         logger.info("Messages from Slack export successfully parsed.")
         self.output_messages()
-
 
     def output_messages(self):
         """
