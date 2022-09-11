@@ -43,7 +43,7 @@ def format_message(timestamp, real_name, message):
     if real_name:
         return f"`{format_time(timestamp)}` **{real_name}**{message_sep}{message}"
     else:
-        return f"`{format_time(timestamp)}{message_sep}{message}"
+        return f"`{format_time(timestamp)}`{message_sep}{message}"
 
 
 def parse_json_slack_export(filename):
