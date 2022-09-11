@@ -22,14 +22,6 @@ import client
 logger = logging.getLogger('slack2discord')
 
 
-# # XXX bot needs to be scoped at the top level to use the `@bot.command` annotation
-# #     so this can *not* move to with start_bot()
-# intents = discord.Intents.default()
-# intents.messages = True
-# intents.message_content = True
-# bot = commands.Bot(command_prefix='!', intents=intents)
-
-
 def format_time(timestamp):
     """
     Given a timestamp in seconds (potentially fractional) since the epoch,
@@ -53,17 +45,6 @@ def format_message(timestamp, real_name, message):
         return f"`{format_time(timestamp)}` **{real_name}**{message_sep}{message}"
     else:
         return f"`{format_time(timestamp)}{message_sep}{message}"
-
-
-# def start_bot(token):
-#     # TODO: Thread this process with bot.start().
-#     # XXX the bot is functional, but the script waits indefinitely after entering the token and doesn't just exit
-#     #     which is somewhat intentional and the nature of the bot
-#     #     but maybe a bot isn't the best match for a CLI script to do a single import
-#     #
-#     # Normally this sets up logging automatically.
-#     # But we have already set up logging manually, so disable that here.
-#     bot.run(token, log_handler=None)
 
 
 def parse_json_slack_export(filename):
@@ -162,9 +143,6 @@ if __name__ == '__main__':
 
     parsed_messages = parse_json_slack_export(filename)
     output_messages(parsed_messages, verbose)
-    #logger.info("Messages from Slack export successfully parsed.")
-    #logger.info("Type \'!slackord\' into a Discord channel to import.")
-    #start_bot(token)
     post_to_discord(token, channel_id, parsed_messages, verbose)
     # XXX return values of asyncio functions are tricky, don't worry about it for now
     logger.info("Discord import complete (may or may not have been successful)")

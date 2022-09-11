@@ -57,7 +57,3 @@ class Slack2DiscordClient(discord.Client):
 
         #logger.info("Done posting messages")
         print("Done posting messages")
-
-
-# client = MyClient(intents=discord.Intents.default())
-# client.run('token')
