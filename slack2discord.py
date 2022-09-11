@@ -7,6 +7,8 @@ import asyncio
 import logging
 from sys import argv, exit
 
+from discord.utils import setup_logging
+
 from slack2discord.client import DiscordClient
 from slack2discord.parser import SlackParser
 
@@ -18,7 +20,7 @@ if __name__ == '__main__':
     # Normally logging gets set up automatically when discord.Client.run() is called.
     # But we want to use logging before then, with the same config.
     # So set it up manually.
-    discord.utils.setup_logging(root=True)
+    setup_logging(root=True)
 
     # XXX eventually do real arg parsing
     if len(argv) != 4:
@@ -34,9 +36,9 @@ if __name__ == '__main__':
     parser = SlackParser(verbose)
     parser.parse_json_slack_export(filename)
 
-    client = DiscordClient(channel_id, parser.parsed_messages, verbose)
+    client = DiscordClient(token, channel_id, parser.parsed_messages, verbose)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
-    client.run(token)
+    client.run()
 
     # XXX return values of asyncio functions are tricky, don't worry about it for now
     logger.info("Discord import from Slack export complete (may or may not have been successful)")

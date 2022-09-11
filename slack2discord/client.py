@@ -14,7 +14,8 @@ class DiscordClient(discord.Client):
     A Discord client for the purposes of importing the content of messages exported from Slack
     *Not* intended to be generic
     """
-    def __init__(self, channel_id, parsed_messages, verbose, *args, **kwargs):
+    def __init__(self, token, channel_id, parsed_messages, verbose, *args, **kwargs):
+        self.token = token
         self.channel_id = channel_id
         self.parsed_messages = parsed_messages
         self.verbose = verbose
@@ -37,6 +38,13 @@ class DiscordClient(discord.Client):
 
     async def on_ready(self):
         logger.info(f"In on_ready(), logged in as {self.user} (ID: {self.user.id})")
+
+    def run(self):
+        """
+        Wrapper around https://discordpy.readthedocs.io/en/latest/api.html#discord.Client.run
+        using the already supplied token
+        """
+        super().run(self.token)
 
     async def post_messages(self):
         """
