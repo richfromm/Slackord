@@ -45,13 +45,15 @@ class SlackParser():
         """
         Parse a JSON file that contains the exported messages from a slack channel
 
-        Return a dict where:
+        Compile a dict where:
         - the keys are the timestamps of the slack messages
         - the values are tuples of length 2
           - the first item is the formatted string of a message ready to post to discord
           - the second item is a dict if this message has a thread, otherwise None.
             - the keys are the timestamps of the messages within the thread
             - the values are the formatted strings of the messages within the thread
+
+        The dict is assembled in self.parsed_messages (not returned)
         """
         with open(filename) as f:
             for message in json.load(f):
