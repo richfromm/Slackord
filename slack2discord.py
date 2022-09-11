@@ -9,7 +9,6 @@ import discord
 from discord.ext import commands
 import json
 import logging
-from pprint import pprint
 from sys import argv, exit
 import time
 

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pprint import pprint
 
 import discord
 
@@ -36,7 +37,7 @@ class Slack2DiscordClient(discord.Client):
         await self.wait_until_ready()
         logger.info(f"Ready. Posting messages to channel id {self.channel_id}")
         if self.verbose:
-            pprint(parsed_messages)
+            pprint(self.parsed_messages)
         channel = self.get_channel(self.channel_id)
         if not channel:
             logger.error(f"Unable to get channel with id {self.channel_id}")
