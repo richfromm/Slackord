@@ -118,7 +118,7 @@ def post_to_discord(token, channel_id, parsed_messages, verbose):
     Iterate through the results of previously parsing the JSON file from a Slack export and post
     each message to Discord in the channel corresponding to the given id. Threading is preserved.
     """
-    discord_client = client.Slack2DiscordClient(channel_id, parsed_messages, verbose, intents=discord.Intents.default())
+    discord_client = client.Slack2DiscordClient(channel_id, parsed_messages, verbose)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
     discord_client.run(token)
 

@@ -14,6 +14,8 @@ class Slack2DiscordClient(discord.Client):
         self.channel_id = channel_id
         self.parsed_messages = parsed_messages
         self.verbose = verbose
+        if 'intents' not in kwargs:
+            kwargs['intents'] = discord.Intents.default()
         super().__init__(*args, **kwargs)
 
     async def setup_hook(self) -> None:
