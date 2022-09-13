@@ -206,9 +206,57 @@ class DiscordClient(discord.Client):
     @decorator
     async def discord_retry(coro, *args, **kwargs):
         logger.info(f"XXX begin discord_retry(), args={args} kwargs={kwargs}")
-        ret = await coro(*args, **kwargs)
-        logger.info("XXX end discord_retry()")
-        return ret
+
+        async def retry(retry_sec):
+            logger.info(f"XXX sleep {retry_sec} sec")
+            await asyncio.sleep(retry_sec)
+
+        message_sent = False
+        while not message_sent:
+            try:
+                ret = await coro(*args, **kwargs)
+                message_sent = True
+                logger.info("XXX end discord_retry()")
+                return ret
+            except Exception as e:
+                logger.warn(f"Caught exception: {e}")
+                await retry(5)
+
+    # @decorator
+    # async def discord_retry(self, coro, *args, **kwargs):
+    #     logger.info(f"XXX begin discord_retry(), coro={coro} args={args} kwargs={kwargs}")
+
+    #     # async def retry(log_msg, retry_sec):
+    #     #     # self.retry_count += 1
+    #     #     logger.warn(log_msg)
+    #     #     # logger.info(f"Will retry #{self.retry_count} after {retry_sec} seconds, press Ctrl-C to abort")
+    #     #     logger.info(f"Will retry after {retry_sec} seconds, press Ctrl-C to abort")
+    #     #     await asyncio.sleep(retry_sec)
+
+    #     message_sent = False
+    #     # self.retry_count = 0
+    #     while not message_sent:
+    #         try:
+    #             ret = await coro(*args, **kwargs)
+    #             message_sent = True
+    #         except discord.RateLimited as rl:
+    #             # In practice I have not been able to get this to happen (the server to return a
+    #             # 429), even when sending lots of messages quickly, or setting
+    #             # max_ratelimit_timeout (minimum 30.0) when initializing the discord client. But I
+    #             # can't find any code in the Python client that appears to be doing automatic rate
+    #             # limiting.
+    #             # For more details, see https://discord.com/developers/docs/topics/rate-limits
+    #             # await retry(f"We have been rate limited sending message: {rl}", r1.retry_after)
+    #             await asyncio.sleep(5)
+    #         except discord.HTTPException as he:
+    #             # await retry(f"Caught HTTP exception sending message: {he}", 5)
+    #             await asyncio.sleep(5)
+    #         except Exception as e:
+    #             # await retry(f"Caught non-HTTP exception sending message: {e}", 5)
+    #             await asyncio.sleep(5)
+
+    #     logger.info("XXX end discord_retry()")
+    #     return ret
 
     # @discord_retry
     # async def send_msg(self, channel, msg):
