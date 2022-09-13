@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from pprint import pprint
+from traceback import print_exc
 
 import discord
 
@@ -19,8 +20,13 @@ class DiscordClient(discord.Client):
         self.channel_id = channel_id
         self.parsed_messages = parsed_messages
         self.verbose = verbose
+        self.retry_count = 0
+
         if 'intents' not in kwargs:
-            kwargs['intents'] = discord.Intents.default()
+            kwargs['intents'] = discord.Intents(
+                messages=True,
+                guilds=True)   # needed for Client.get_channel() and Client.get_all_channels()
+
         super().__init__(*args, **kwargs)
 
     async def setup_hook(self) -> None:
@@ -65,17 +71,67 @@ class DiscordClient(discord.Client):
                 return
 
             for timestamp in sorted(self.parsed_messages.keys()):
+                # XXX to help test failures, slow this down
+                logger.info("XXX Waiting 1 sec to slow things down for testing failures")
+                await asyncio.sleep(1)
                 (message, thread) = self.parsed_messages[timestamp]
-                sent_message = await channel.send(message)
+                sent_message = await self.send_msg(channel, message)
                 logger.info(f"Message posted: {timestamp}")
 
                 if thread:
                     created_thread = await sent_message.create_thread(name=f"thread{timestamp}")
                     for timestamp_in_thread in sorted(thread.keys()):
+                        # XXX to help test failures, slow this down
+                        logger.info("XXX Waiting 1 sec to slow things down for testing failures")
+                        await asyncio.sleep(1)
                         thread_message = thread[timestamp_in_thread]
                         await created_thread.send(thread_message)
                         logger.info(f"Message in thread posted: {timestamp_in_thread}")
 
             logger.info("Done posting messages")
+        except Exception as e:
+            # Ideally this shouldn't happen
+            # But when it does, esp. during development, this is helpful for debugging problems
+            logger.error(f"Caught exception posting messages: {e}")
+            print_exc()
         finally:
             await self.close()
+
+    async def send_msg(self, channel, msg):
+        """
+        Send a single message to a channel
+
+        In the event of failure (e.g. getting rate limited by the server, HTTP exceptions, any
+        other exceptions), will retry indefinitely until successful.
+
+        This is not strictly the correct thing to do in all scenarios. But it's a lot more
+        difficult to try to differentiate what failures should and not should not retry, so leave
+        it up to the user to press Ctrl-C to manually cancel if they do not want to retry.
+
+        Additionally, it is hoped that a substantial class of failures would have been caught
+        earlier (e.g. when instantiating the discord.Client), before we get to send_msg().
+        """
+        async def retry(log_msg, retry_sec):
+            self.retry_count += 1
+            logger.warn(log_msg)
+            logger.info(f"Will retry #{self.retry_count} after {retry_sec} seconds, press Ctrl-C to abort")
+            await asyncio.sleep(retry_sec)
+
+        message_sent = False
+        self.retry_count = 0
+        while not message_sent:
+            try:
+                await channel.send(msg)
+                message_sent = True
+            except discord.RateLimited as rl:
+                # In practice I have not been able to get this to happen (the server to return a
+                # 429), even when sending lots of messages quickly, or setting
+                # max_ratelimit_timeout (minimum 30.0) when initializing the discord client. But I
+                # can't find any code in the Python client that appears to be doing automatic rate
+                # limiting.
+                # For more details, see https://discord.com/developers/docs/topics/rate-limits
+                await retry(f"We have been rate limited sending message: {rl}", r1.retry_after)
+            except discord.HTTPException as he:
+                await retry(f"Caught HTTP exception sending message: {he}", 5)
+            except Exception as e:
+                await retry(f"Caught non-HTTP exception sending message: {e}", 5)
