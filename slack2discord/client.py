@@ -71,9 +71,6 @@ class DiscordClient(discord.Client):
                 return
 
             for timestamp in sorted(self.parsed_messages.keys()):
-                # XXX to help test failures, slow this down
-                logger.info("XXX Waiting 1 sec to slow things down for testing failures")
-                await asyncio.sleep(1)
                 (message, thread) = self.parsed_messages[timestamp]
                 sent_message = await self.send_msg_to_channel(channel, message)
                 logger.info(f"Message posted: {timestamp}")
@@ -81,9 +78,6 @@ class DiscordClient(discord.Client):
                 if thread:
                     created_thread = await self.create_thread(sent_message, f"thread{timestamp}")
                     for timestamp_in_thread in sorted(thread.keys()):
-                        # XXX to help test failures, slow this down
-                        logger.info("XXX Waiting 1 sec to slow things down for testing failures")
-                        await asyncio.sleep(1)
                         thread_message = thread[timestamp_in_thread]
                         await self.send_msg_to_thread(created_thread, thread_message)
                         logger.info(f"Message in thread posted: {timestamp_in_thread}")
