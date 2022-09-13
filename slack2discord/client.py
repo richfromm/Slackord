@@ -206,8 +206,9 @@ class DiscordClient(discord.Client):
     @decorator
     async def discord_retry(coro, *args, **kwargs):
         logger.info(f"XXX begin discord_retry(), args={args} kwargs={kwargs}")
-        await coro(*args, **kwargs)
+        ret = await coro(*args, **kwargs)
         logger.info("XXX end discord_retry()")
+        return ret
 
     # @discord_retry
     # async def send_msg(self, channel, msg):
