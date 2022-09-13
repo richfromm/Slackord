@@ -75,17 +75,17 @@ class DiscordClient(discord.Client):
                 logger.info("XXX Waiting 1 sec to slow things down for testing failures")
                 await asyncio.sleep(1)
                 (message, thread) = self.parsed_messages[timestamp]
-                sent_message = await self.send_msg(channel, message)
+                sent_message = await self.send_msg_to_channel(channel, message)
                 logger.info(f"Message posted: {timestamp}")
 
                 if thread:
-                    created_thread = await sent_message.create_thread(name=f"thread{timestamp}")
+                    created_thread = await self.create_thread(sent_message, f"thread{timestamp}")
                     for timestamp_in_thread in sorted(thread.keys()):
                         # XXX to help test failures, slow this down
                         logger.info("XXX Waiting 1 sec to slow things down for testing failures")
                         await asyncio.sleep(1)
                         thread_message = thread[timestamp_in_thread]
-                        await created_thread.send(thread_message)
+                        await self.send_msg_to_thread(created_thread, thread_message)
                         logger.info(f"Message in thread posted: {timestamp_in_thread}")
 
             logger.info("Done posting messages")
@@ -141,20 +141,40 @@ class DiscordClient(discord.Client):
                 # limiting.
                 # For more details, see https://discord.com/developers/docs/topics/rate-limits
                 retry_count += 1
-                await retry(f"We have been rate limited sending message: {rl}", retry_count, r1.retry_after)
+                await retry(f"We have been rate limited {desc}: {rl}", retry_count, r1.retry_after)
             except discord.HTTPException as he:
                 retry_count += 1
-                await retry(f"Caught HTTP exception sending message: {he}", retry_count, 5)
+                await retry(f"Caught HTTP exception {desc}: {he}", retry_count, 5)
             except Exception as e:
                 retry_count += 1
-                await retry(f"Caught non-HTTP exception sending message: {e}", retry_count, 5)
+                await retry(f"Caught non-HTTP exception {desc}: {e}", retry_count, 5)
 
-    @discord_retry(desc="sending message")
-    async def send_msg(self, channel, msg):
+    @discord_retry(desc="sending message to channel")
+    async def send_msg_to_channel(self, channel, msg):
         """
         Send a single message to a channel
 
         In the event of failure, will retry indefinitely until successful.
         See discord_retry() docstring for more details.
         """
-        await channel.send(msg)
+        return await channel.send(msg)
+
+    @discord_retry(desc="creating thread")
+    async def create_thread(self, root_message, thread_name):
+        """
+        Create a thread rooted at the given message, with the given name.
+
+        In the event of failure, will retry indefinitely until successful.
+        See discord_retry() docstring for more details.
+        """
+        return await root_message.create_thread(name=thread_name)
+
+    @discord_retry(desc="sending message to thread")
+    async def send_msg_to_thread(self, thread, msg):
+        """
+        Send a single message to a thread
+
+        In the event of failure, will retry indefinitely until successful.
+        See discord_retry() docstring for more details.
+        """
+        return await thread.send(msg)
