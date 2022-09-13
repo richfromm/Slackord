@@ -121,6 +121,10 @@ class DiscordClient(discord.Client):
                 await discord_obj.discord_func(arg1, arg2)
 
         """
+        # seconds to wait on subsequent retries
+        # not used in the rate limiting case, where the retry is explicitly provided
+        retry_backoff = [1, 5, 30]
+
         coro_called = False
         retry_count = 0
         while not coro_called:
@@ -144,7 +148,8 @@ class DiscordClient(discord.Client):
                         exc_msg = "Caught HTTP exception"
                     else:
                         exc_msg = "Caught non-HTTP exception"
-                    retry_sec = 5
+                    retry_idx = min(retry_count - 1, len(retry_backoff) - 1)
+                    retry_sec = retry_backoff[retry_idx]
 
                 logger.warn(f"{exc_msg} {desc}: {e}")
                 logger.info(f"Will retry #{retry_count} after {retry_sec} seconds, press Ctrl-C to abort")
