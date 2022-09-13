@@ -121,12 +121,12 @@ class DiscordClient(discord.Client):
                 await discord_obj.discord_func(arg1, arg2)
 
         """
-        message_sent = False
+        coro_called = False
         retry_count = 0
-        while not message_sent:
+        while not coro_called:
             try:
                 ret = await coro(*args, **kwargs)
-                message_sent = True
+                coro_called = True
                 return ret
             except Exception as e:
                 retry_count += 1
