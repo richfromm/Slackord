@@ -204,8 +204,8 @@ class DiscordClient(discord.Client):
     #     return wrapper
 
     @decorator
-    async def discord_retry(coro, *args, **kwargs):
-        logger.info(f"XXX begin discord_retry(), args={args} kwargs={kwargs}")
+    async def discord_retry(coro, what="foo", *args, **kwargs):
+        logger.info(f"XXX begin discord_retry(), what={what} args={args} kwargs={kwargs}")
 
         async def retry(retry_sec):
             logger.info(f"XXX sleep {retry_sec} sec")
@@ -214,6 +214,7 @@ class DiscordClient(discord.Client):
         message_sent = False
         while not message_sent:
             try:
+                logger.info(f"XXX we are {what}")
                 ret = await coro(*args, **kwargs)
                 message_sent = True
                 logger.info("XXX end discord_retry()")
@@ -264,7 +265,7 @@ class DiscordClient(discord.Client):
     #     await self.discord_retry(channel.send(msg))
     #     logger.info("XXX end send_message")
 
-    @discord_retry
+    @discord_retry(what="sending message")
     async def send_msg(self, channel, msg):
         logger.info(f"XXX begin send_message, channel={channel} msg={msg}")
         await channel.send(msg)
