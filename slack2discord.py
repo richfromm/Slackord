@@ -30,13 +30,12 @@ if __name__ == '__main__':
         raise NotImplementedError("--src_dir (one channel) not yet implemented")
     if config.src_dirtree:
         raise NotImplementedError("--src_dirtree (multiple channels) not yet implemented")
-    if config.dry_run:
-        raise NotImplementedError("--dry_run not yet implemented")
 
     parser = SlackParser(config.verbose)
     parser.parse_json_slack_export(config.src_file)
 
-    client = DiscordClient(config.token, config.dest_channel, parser.parsed_messages, config.verbose)
+    client = DiscordClient(config.token, config.dest_channel, parser.parsed_messages,
+                           verbose=config.verbose, dry_run=config.dry_run)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
     client.run()
 

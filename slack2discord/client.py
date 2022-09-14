@@ -16,18 +16,22 @@ class DiscordClient(discord.Client):
     A Discord client for the purposes of importing the content of messages exported from Slack
     *Not* intended to be generic
     """
-    def __init__(self, token, channel_name, parsed_messages, verbose, *args, **kwargs):
+    def __init__(self, token, channel_name, parsed_messages,
+                 verbose=False, dry_run=False,
+                 **kwargs):
         self.token = token
         self.channel_name = channel_name
         self.parsed_messages = parsed_messages
         self.verbose = verbose
+        self.dry_run = dry_run
+        print(f"kwargs = {kwargs}")
 
         if 'intents' not in kwargs:
             kwargs['intents'] = discord.Intents(
                 messages=True,
                 guilds=True)   # needed for Client.get_channel() and Client.get_all_channels()
 
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     async def setup_hook(self) -> None:
         logger.info("In setup_hook(), creating background task")
@@ -168,6 +172,10 @@ class DiscordClient(discord.Client):
         In the event of failure, will retry indefinitely until successful.
         See discord_retry() docstring for more details.
         """
+        if self.dry_run:
+            logger.info("DRY RUN: channel.send(msg)")
+            return
+
         return await channel.send(msg)
 
     @discord_retry(desc="creating thread")
@@ -178,6 +186,10 @@ class DiscordClient(discord.Client):
         In the event of failure, will retry indefinitely until successful.
         See discord_retry() docstring for more details.
         """
+        if self.dry_run:
+            logger.info(f"DRY RUN: root_message.create_thread(name={thread_name})")
+            return
+
         return await root_message.create_thread(name=thread_name)
 
     @discord_retry(desc="sending message to thread")
@@ -188,4 +200,8 @@ class DiscordClient(discord.Client):
         In the event of failure, will retry indefinitely until successful.
         See discord_retry() docstring for more details.
         """
+        if self.dry_run:
+            logger.info("DRY_RUN: thread.send(msg)")
+            return
+
         return await thread.send(msg)
