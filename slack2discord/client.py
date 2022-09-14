@@ -73,7 +73,7 @@ class DiscordClient(discord.Client):
                 return
 
             if len(channels) > 1:
-                logger.warn(f"Found multiple channel id's with the same name '{self.channel}': {channel_ids}")
+                logger.warn(f"Found multiple channels with the same name '{self.channel}': id {channel_ids}")
                 logger.info("Will arbitrarily pick the first")
 
             channel = channels[0]
