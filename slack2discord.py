@@ -10,6 +10,7 @@ from sys import argv, exit
 from discord.utils import setup_logging
 
 from slack2discord.client import DiscordClient
+from slack2discord.config import get_config
 from slack2discord.parser import SlackParser
 
 
@@ -22,21 +23,20 @@ if __name__ == '__main__':
     # So set it up manually.
     setup_logging(root=True)
 
-    # XXX eventually do real arg parsing
-    if len(argv) != 4:
-        print(f"Usage {argv[0]} <token> <filename> <channel>")
-        exit(1)
+    config = get_config(argv)
 
-    token = argv[1]
-    filename = argv[2]
-    channel = argv[3]
-    # XXX this should be an arg, for now just edit here
-    verbose = False
+    # XXX this is a WIP
+    if config.src_dir:
+        raise NotImplementedError("--src_dir (one channel) not yet implemented")
+    if config.src_dirtree:
+        raise NotImplementedError("--src_dirtree (multiple channels) not yet implemented")
+    if config.dry_run:
+        raise NotImplementedError("--dry_run not yet implemented")
 
-    parser = SlackParser(verbose)
-    parser.parse_json_slack_export(filename)
+    parser = SlackParser(config.verbose)
+    parser.parse_json_slack_export(config.src_file)
 
-    client = DiscordClient(token, channel, parser.parsed_messages, verbose)
+    client = DiscordClient(config.token, config.dest_channel, parser.parsed_messages, config.verbose)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
     client.run()
 
