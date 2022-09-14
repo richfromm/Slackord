@@ -16,9 +16,9 @@ class DiscordClient(discord.Client):
     A Discord client for the purposes of importing the content of messages exported from Slack
     *Not* intended to be generic
     """
-    def __init__(self, token, channel_id, parsed_messages, verbose, *args, **kwargs):
+    def __init__(self, token, channel_name, parsed_messages, verbose, *args, **kwargs):
         self.token = token
-        self.channel_id = channel_id
+        self.channel_name = channel_name
         self.parsed_messages = parsed_messages
         self.verbose = verbose
 
@@ -59,16 +59,27 @@ class DiscordClient(discord.Client):
         """
         logger.info("Waiting until ready")
         await self.wait_until_ready()
-        logger.info(f"Ready. Posting messages to channel id {self.channel_id}")
+        logger.info(f"Ready. Posting messages to channel {self.channel_name}")
         if self.verbose:
             pprint(self.parsed_messages)
 
         try:
-            channel = self.get_channel(self.channel_id)
-            if not channel:
-                logger.error(f"Unable to get channel with id {self.channel_id}")
+            channels = [channel
+                        for channel in self.get_all_channels()
+                        if channel.name == self.channel_name]
+            if not channels:
+                logger.error(f"Unable to find channel '{self.channel_name}'")
                 logger.warn("Will NOT be able to post messages")
                 return
+
+            if len(channels) > 1:
+                logger.warn(f"Found multiple channel id's with the same name '{self.channel}': {channel_ids}")
+                logger.info("Will arbitrarily pick the first")
+
+            channel = channels[0]
+            logger.info(f"Successfully got channel {channel} with id {channel.id}")
+            if not isinstance(channel, discord.TextChannel):
+                logger.warn(f"channel {channel} is NOT a TextChannel. This is not expected.")
 
             for timestamp in sorted(self.parsed_messages.keys()):
                 (message, thread) = self.parsed_messages[timestamp]

@@ -24,19 +24,19 @@ if __name__ == '__main__':
 
     # XXX eventually do real arg parsing
     if len(argv) != 4:
-        print(f"Usage {argv[0]} <token> <filename> <channel_id>")
+        print(f"Usage {argv[0]} <token> <filename> <channel>")
         exit(1)
 
     token = argv[1]
     filename = argv[2]
-    channel_id = int(argv[3])
+    channel = argv[3]
     # XXX this should be an arg, for now just edit here
     verbose = False
 
     parser = SlackParser(verbose)
     parser.parse_json_slack_export(filename)
 
-    client = DiscordClient(token, channel_id, parser.parsed_messages, verbose)
+    client = DiscordClient(token, channel, parser.parsed_messages, verbose)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
     client.run()
 
