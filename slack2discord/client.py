@@ -74,6 +74,8 @@ class DiscordClient(discord.Client):
             if not channels:
                 logger.error(f"Unable to find channel '{self.channel_name}'")
                 logger.warn("Will NOT be able to post messages")
+                # XXX need to think more about error handling.
+                #     should we raise RuntimeError in this case?
                 return
 
             if len(channels) > 1:
@@ -97,10 +99,15 @@ class DiscordClient(discord.Client):
                         await self.send_msg_to_thread(created_thread, thread_message)
                         logger.info(f"Message in thread posted: {timestamp_in_thread}")
 
+            # XXX maybe set a boolean to indicate success to the caller,
+            #     if actual return values are hard?
             logger.info("Done posting messages")
         except Exception as e:
             # Ideally this shouldn't happen
             # But when it does, esp. during development, this is helpful for debugging problems
+            # XXX need to think more about error handling.
+            #     should we be swallowing the exception, or passing it up,
+            #     or at least in some way communicating success or failure to the caller
             logger.error(f"Caught exception posting messages: {e}")
             print_exc()
         finally:
