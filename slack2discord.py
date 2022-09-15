@@ -26,19 +26,26 @@ if __name__ == '__main__':
     config = get_config(argv)
 
     # XXX this is a WIP
-    if config.src_dir:
-        raise NotImplementedError("--src_dir (one channel) not yet implemented")
     if config.src_dirtree:
         raise NotImplementedError("--src_dirtree (multiple channels) not yet implemented")
 
-    parser = SlackParser(config.verbose)
-    parser.parse_json_slack_export(config.src_file)
+    # parse either a single file (one day of one Slack channel),
+    # or all of the files in a dir (all days for one Slack channel)
+    parser = SlackParser(
+        src_file=config.src_file,
+        src_dir=config.src_dir,
+        dest_channel=config.dest_channel,
+        verbose=config.verbose)
+    parser.parse()
 
-    client = DiscordClient(config.token, config.dest_channel, parser.parsed_messages,
+    # post the parsed messages to a Discord channel
+    client = DiscordClient(config.token, parser.dest_channel, parser.parsed_messages,
                            verbose=config.verbose, dry_run=config.dry_run)
-    # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt b/c it is caught by the run() loop in the discord client
+    # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt
+    # b/c it is caught by the run() loop in the discord client
     client.run()
 
     # XXX return values of asyncio functions are tricky, don't worry about it for now
+    #     we could set a boolean on success within the client
     logger.info("Discord import from Slack export complete (may or may not have been successful)")
     exit(0)
