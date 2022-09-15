@@ -1,5 +1,7 @@
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import logging
+from os import environ
+from os.path import dirname, isfile, join
 from sys import argv, exit
 from textwrap import dedent
 
@@ -13,11 +15,10 @@ DESCRIPTION = dedent(
     """)
 
 # XXX TO DO:
-# - token will be optional, if not cmd line optino, then env var or dot file
 # - consider adding the ability for the script to create channels
 USAGE = dedent(
     f"""
-    {argv[0]} --token TOKEN [-v | --verbose] [-n | --dry-run] <src-and-test-related-options>
+    {argv[0]} [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-test-related-options>
 
     src and dest related options must follow one of the following mutually exclusive formats:
 
@@ -72,12 +73,42 @@ def exit_usage(msg):
     exit(1)
 
 
+def get_token(config):
+    """
+    Ensure that we have a discord token
+
+    If this is already provided in the config (via a command line option), we're done.
+    If not, attempt to get from (in order):
+    * DISCORD_TOKEN env var
+    * .discord_token file in dir of script
+    """
+    if config.token:
+        return
+
+    if 'DISCORD_TOKEN' in environ:
+        config.token = environ['DISCORD_TOKEN']
+        return
+
+    discord_token_filename = join(dirname(__file__), '..', '.discord_token')
+    if isfile(discord_token_filename):
+        with open(discord_token_filename) as f:
+            config.token = f.read().strip()
+        return
+
+    # if we get this far, we don't have a token
+    exit_usage("Discord token is required via either (in order) --token command line arg,"
+               " DISCORD_TOKEN env var, or .discord_token file in same dir as script")
+
+
 def check_config(config):
     """
     Check that the config is legal.
 
     Mutually exclusive ways of running the script (see USAGE above) make this a bit more
     complicated than simply required vs. optional args.
+
+    The Discord token can also be set in various was (see get_token()), but ultimately it must be
+    set.
     """
     # These are all mutually exclusive
     one_file = config.src_file is not None
@@ -103,6 +134,9 @@ def check_config(config):
         exit_usage("--channel_file is only allowed with --src_dirtree (multiple channels)."
                    " It is not allowed with --src_file (one file) or --src_dir (one channel)")
 
+    if not config.token:
+        exit_usage("Discord token is not set (cmd line arg, env var, or dot file)")
+
 
 def get_config(argv):
     """
@@ -112,12 +146,13 @@ def get_config(argv):
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
                             description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
 
-    # XXX this will eventually be optional
-    #     searchlist will be: cmd line option, DISCORD_TOKEN env var, .discord_token file in dir of script
     parser.add_argument('--token',
-                        required=True,
+                        required=False,
                         help="Discord token. Obtain from the Discord GUI when setting up your"
-                        " application at https://discordapp.com/developers/applications/")
+                        " application at https://discordapp.com/developers/applications/ ."
+                        " If not set via command line option, will search in order in"
+                        " DISCORD_TOKEN env var, then .discord_token file in same dir as script."
+                        " Must be set in one of these locations.")
 
     parser.add_argument('--src_file',
                         required=False,
@@ -157,5 +192,6 @@ def get_config(argv):
                         action='store_true')
 
     config = parser.parse_args()
+    get_token(config)
     check_config(config)
     return config

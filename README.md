@@ -1,9 +1,23 @@
-# XXX OUT OF DATE XXX
+# slack2discord
 
 This repo has hard forked (from Slackord) and is in the process of a
 significant refactoring. The new repo is slack2discord
 
 This README will be updated when that effort is complete.
+
+For now, significant help is available via:
+    ```
+    ./slack2discord.py --help
+    ```
+
+## Prereqs
+
+Install the following into a Python virtualenv:
+    ```
+    pip install discord.py decorator
+    ```
+
+# XXX OUT OF DATE XXX
 
 # Please note: Slackord 2 is out! 
 You can get it here: https://github.com/thomasloupe/Slackord2
