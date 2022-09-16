@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import logging
 from os import listdir
-from os.path import basename, join
+from os.path import basename, join, isdir
 from re import match
 import time
 
@@ -15,11 +15,22 @@ class SlackParser():
     A parser for exported files from Slack
     to interpret the content of messages to post to Discord
     """
-    def __init__(self, src_file=None, src_dir=None, dest_channel=None, verbose=False):
+    def __init__(self,
+                 src_file=None, src_dir=None, dest_channel=None,
+                 src_dirtree=None, channel_file=None,
+                 verbose=False):
+        # These are from the config, some will be None
         self.src_file = src_file
         self.src_dir = src_dir
         self.dest_channel = dest_channel
+        self.src_dirtree = src_dirtree
+        self.channel_file = channel_file
         self.verbose = verbose
+
+        # See set_channel_map() for details
+        self.channel_map = dict()
+
+        # See parse() for details
         self.parsed_messages = dict()
 
     @staticmethod
@@ -56,48 +67,104 @@ class SlackParser():
         else:
             return f"`{SlackParser.format_time(timestamp)}`{message_sep}{message}"
 
+    def set_channel_map(self):
+        """
+        Populate a dict where the keys are Slack channel names and the values are corresponding
+        Discord channel names.
+
+        If the channel names are the same in Slack and Discord, a value can be the same as a key.
+
+        The dict will have multiple items only in the src_dirtree case.
+
+        In both the src_dir and src_file cases, there is only one item.
+
+        In the src_file case, the key is None, and it's only the value that matters.
+
+        Does not return anything, the results populate the class member self.channel_map
+        """
+        def canonicalize(channel_name):
+            """
+            Strip the leading pound sign (#) if present in a channel name
+            """
+            if channel_name.startswith('#'):
+                return channel_name[1:]
+
+            return channel_name
+
+        if self.src_dir and not self.dest_channel:
+            # infer the dest Discord channel
+            self.dest_channel = basename(self.src_dir)
+            logger.info(f"Inferring dest Discord channel: {self.dest_channel}")
+
+        if self.src_file:
+            # one channel only, one file
+            self.channel_map[None] = canonicalize(self.dest_channel)
+
+        elif self.src_dir:
+            # one channel only, one dir
+            self.channel_map[basename(self.src_dir)] = canonicalize(self.dest_channel)
+
+        elif self.src_dirtree:
+            # multiple channels
+
+            # get the list of all slack channels from the list of subdirs in the export.
+            # we could also get this by parsing the `name` attributes in the channels.json file.
+            # we need this for the case with no channel file.
+            # we do this for both cases to verify that slack channels in the channel file exist in
+            # the slack export.
+            all_slack_channels = [subdir
+                                  for subdir in listdir(path=self.src_dirtree)
+                                  if isdir(join(self.src_dirtree, subdir))]
+
+            if self.channel_file:
+                # if there is a channel file, parse the file
+                with open(self.channel_file) as _file:
+                    for line in _file:
+                        fields = line.strip().split()
+                        if len(fields) == 0:
+                            # empty line, okay, skip
+                            pass
+                        elif len(fields) > 2:
+                            raise RuntimeException(
+                                "Line in file mapping Slack to Discord channels has too many"
+                                f" fields: {fields}")
+                        else:
+                            slack_channel = canonicalize(fields[0])
+                            if slack_channel not in all_slack_channels:
+                                raise ValueError(
+                                    f"Slack channel {slack_channel} from channel file"
+                                    " {self.channel_file} is not in the slack export at"
+                                    " {self.src_dirtree}")
+                            if len(fields) == 1:
+                                # slack channel only, discord channel is same
+                                self.channel_map[slack_channel] = slack_channel
+                            else:
+                                # map of slack to discord channel
+                                discord_channel = canonicalize(fields[1])
+                                self.channel_map[slack_channel] = discord_channel
+
+            else:
+                # if there is not a channel file, include all slack channels, with the same name in
+                # discord.
+                for slack_channel in all_slack_channels:
+                    self.channel_map[slack_channel] = slack_channel
+        else:
+            # this shouldn't happen
+            raise RuntimeError("No channel related option type is set, can't set channel map")
+
+        logger.info(f"Mapping of Slack to Discord channel(s): {self.channel_map}")
+
     def parse(self):
         """
-        Parse a Slack export.
+        Parse a Slack export, and populate a dict with its contents.
 
         Whether this is a single file, or an entire dir, depends on the configuration that was
         passed in during initialization.
-        """
-        if self.src_dir:
-            self.parse_channel(self.src_dir)
-        elif self.src_file:
-            self.parse_file(self.src_file)
-        else:
-            logger.error("Neither src dir nor file set, will not parse")
 
-    def parse_channel(self, channel_dir):
-        """
-        Parse all of the files in a single dir corresponding to one slack channel
+        The structure of the dict is somewhat complicated.
 
-        Each file corresponds to a single day for that channel
-        """
-        # infer the dest Discord channel if needed
-        if not self.dest_channel:
-            self.dest_channel = basename(channel_dir)
-            logger.info(f"Inferring dest Discord channel: {self.dest_channel}")
-
-        # these are the basename's only (not including the dir)
-        # this list is not sorted
-        filenames = [filename
-                     for filename in listdir(path=channel_dir)
-                     if SlackParser.is_slack_export_filename(filename)]
-
-        # sort the list so that we parse all of the files for a single channel in date order
-        for filename in sorted(filenames):
-            self.parse_file(join(channel_dir, filename))
-
-    def parse_file(self, filename):
-        """
-        Parse a single JSON file that contains exported messages from a slack channel
-
-        In practice, one file corresponds to a single calendar day of activity
-
-        Compile a dict where:
+        The keys are Discord channel names.
+        The values are dicts, where:
         - the keys are the timestamps of the slack messages
         - the values are tuples of length 2
           - the first item is the formatted string of a message ready to post to discord
@@ -105,15 +172,85 @@ class SlackParser():
             - the keys are the timestamps of the messages within the thread
             - the values are the formatted strings of the messages within the thread
 
-        The dict is assembled in self.parsed_messages (not returned)
+        Does not return anything, the results populate the class member self.parsed_messages
         """
-        logger.info(f"Parsing JSON Slack export file: {filename}")
+        self.set_channel_map()
+        for slack_channel, discord_channel in self.channel_map.items():
+            self.parse_channel(slack_channel, discord_channel)
+
+        logger.info("Messages from Slack export successfully parsed.")
+
+    def parse_channel(self, slack_channel, discord_channel):
+        """
+        Parse all of the files that we will import to a single Discord channel.
+
+        This could be either all of the files in a single dir corresponding to one Slack channel,
+        or just a single file explicitly specified (from one Slack channel).
+
+        In the single file case, slack_channel is None.
+
+        Each file corresponds to a single day for a single Slack channel.
+
+        Does not return anything, the results populate the class member self.parsed_messages
+        See parse() above for more details.
+        """
+        channel_msgs_dict = dict()
+
+        if slack_channel:
+            # parse all of the files in a dir for a single slack channel
+            logger.info(f"Parsing Slack channel {slack_channel} from export, to import to Discord"
+                        f" channel {discord_channel}")
+            if self.src_dirtree:
+                channel_dir = join(self.src_dirtree, slack_channel)
+            else:
+                assert self.src_dir, f"No slack source dir tree or source dir is set for slack channel {slack_channel}"
+                channel_dir = self.src_dir
+
+            # these are the basename's only (not including the dir)
+            # this list is not sorted
+            filenames = [filename
+                         for filename in listdir(path=channel_dir)
+                         if SlackParser.is_slack_export_filename(filename)]
+            if not filenames:
+                logger.warn("Unable to find any slack export JSON files for slack channel"
+                            f" {slack_channel} in dir {channel_dir}")
+                # XXX or should this be fatal and raise an Exception ?
+                return
+
+            # sort the list so that we parse all of the files for a single channel in date order
+            for filename in sorted(filenames):
+                self.parse_file(join(channel_dir, filename), channel_msgs_dict)
+
+        else:
+            # if no slack channel is set, then there is only a single file to parse
+            # this should only happen in the single file case
+            assert self.src_file, "No slack channel is set, but neither is a source file"
+            logger.info(f"Parsing a single Slack export file only {self.src_file}, to import to"
+                        f" Discord channel {discord_channel}")
+            self.parse_file(self.src_file, channel_msgs_dict)
+
+        self.output_messages(discord_channel, channel_msgs_dict)
+        self.parsed_messages[discord_channel] = channel_msgs_dict
+
+    def parse_file(self, filename, channel_msgs_dict):
+        """
+        Parse a single JSON file that contains exported messages from a slack channel.
+
+        In practice, one file corresponds to a single calendar day of activity.
+
+        The messages are added to the passed in dict for that channel.
+        The dict itself is a value from the self.parsed_messages dict.
+        See parse() above for more details.
+
+        Does not return anything, channel_msgs_dict is populated in place.
+        """
+        logger.info(f"Parsing Slack export JSON file: {filename}")
 
         if not SlackParser.is_slack_export_filename(filename):
             logger.warn(f"Filename is not named as expected, will try to parse anyway: {filename}")
 
-        with open(filename) as f:
-            for message in json.load(f):
+        with open(filename) as _file:
+            for message in json.load(_file):
                 if 'user_profile' in message and 'ts' in message and 'text' in message:
                     timestamp = float(message['ts'])
                     real_name = message['user_profile']['real_name']
@@ -122,11 +259,11 @@ class SlackParser():
 
                     if 'replies' in message:
                         # this is the head of a thread
-                        self.parsed_messages[timestamp] = (full_message_text, dict())
+                        channel_msgs_dict[timestamp] = (full_message_text, dict())
                     elif 'thread_ts' in message:
                         # this is within a thread
                         thread_timestamp = float(message['thread_ts'])
-                        if thread_timestamp not in self.parsed_messages:
+                        if thread_timestamp not in channel_msgs_dict:
                             # can't find the root of the thread to which this message belongs
                             # ideally this shouldn't happen
                             # but it could if you have a long enough message history not captured in the exported file
@@ -134,30 +271,29 @@ class SlackParser():
                                            " creating synthetic thread")
                             fake_message_text = SlackParser.format_message(
                                 thread_timestamp, None, '_Unable to find start of exported thread_')
-                            self.parsed_messages[thread_timestamp] = (fake_message_text, dict())
+                            channel_msgs_dict[thread_timestamp] = (fake_message_text, dict())
 
                         # add to the dict either for the existing thread
                         # or the fake thread that we created above
-                        self.parsed_messages[thread_timestamp][1][timestamp] = full_message_text
+                        channel_msgs_dict[thread_timestamp][1][timestamp] = full_message_text
                     else:
                         # this is not associated with a thread at all
-                        self.parsed_messages[timestamp] = (full_message_text, None)
+                        channel_msgs_dict[timestamp] = (full_message_text, None)
 
-        logger.info("Messages from Slack export successfully parsed.")
-        self.output_messages()
+        logger.info(f"Messages from Slack export file successfully parsed: {filename}")
 
-    def output_messages(self):
+    def output_messages(self, discord_channel, channel_msgs_dict):
         """
-        Log the parsed messages (or a summary)
+        Log the parsed messages (or a summary) for a single channel
         """
         verbose_substr = "The following" if self.verbose else "A total of"
-        logger.info(f"{verbose_substr} {len(self.parsed_messages)} messages"
-                    " (plus thread contents if applicable) have been parsed")
+        logger.info(f"{verbose_substr} {len(channel_msgs_dict)} messages (plus thread contents if"
+                    f" applicable) have been parsed for Discord channel {discord_channel}")
         if not self.verbose:
             return
 
-        for timestamp in sorted(self.parsed_messages.keys()):
-            (message, thread) = self.parsed_messages[timestamp]
+        for timestamp in sorted(channel_msgs_dict.keys()):
+            (message, thread) = channel_msgs_dict[timestamp]
             logger.info(message)
             if thread:
                 for timestamp_in_thread in sorted(thread.keys()):
