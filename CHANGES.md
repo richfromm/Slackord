@@ -15,6 +15,10 @@ Major refactoring, with additional functionality
     * Single channels can be specified directly on the command line,
       multiple channels can be specified via a file.
     * Support different channel names in Slack and Discord.
+* Retry Discord command within inner loop of posting messages
+    * With backoff
+    * Includes handling HTTP 429 (Rate Limited), although in practice
+      I have not yet encountered this
 * Control as a command line script with args passed on command line
 * Support multiple methods of invocation
     * A single export file (one day of one channel)
