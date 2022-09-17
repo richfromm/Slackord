@@ -14,8 +14,6 @@ DESCRIPTION = dedent(
     slack2discord parses data exported from Slack, and imports it to Discord.
     """)
 
-# XXX TO DO:
-# - consider adding the ability for the script to create channels
 USAGE = dedent(
     f"""
     {argv[0]} [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-test-related-options>
