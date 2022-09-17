@@ -20,9 +20,10 @@ significant enough, that we mutually decided that me continuing
 development on a hard fork would be better.
 
 Note that there also exists a .NET version
-[thomasloupe/Slackord2](https://github.com/thomasloupe/Slackord2) by
-the original author, that appears to be more actively maintained than
-the upstream fork from which this Python project originates.
+[thomasloupe/Slackord2](https://github.com/thomasloupe/Slackord2) by the
+original author, that contains additional functionality and appears to be more
+actively maintained than the upstream fork from which this Python project
+originates.
 
 ## Prereqs
 
