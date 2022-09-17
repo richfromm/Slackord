@@ -91,8 +91,8 @@ def get_token(config):
 
     discord_token_filename = join(dirname(__file__), '..', '.discord_token')
     if isfile(discord_token_filename):
-        with open(discord_token_filename) as f:
-            config.token = f.read().strip()
+        with open(discord_token_filename) as _file:
+            config.token = _file.read().strip()
         return
 
     # if we get this far, we don't have a token
