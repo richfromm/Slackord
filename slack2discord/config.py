@@ -22,19 +22,19 @@ USAGE = dedent(
 
     src and dest related options must follow one of the following mutually exclusive formats:
 
-        --src_file SRC_FILE --dest_channel DEST_CHANNEL
+        --src-file SRC_FILE --dest-channel DEST_CHANNEL
 
             This is for importing a single file from a Slack export, that corresponds to a single
             day of a single channel. Both the src file and the dest Discord channel are required.
 
-        --src_dir SRC_DIR [--dest_channel DEST_CHANNEL]
+        --src-dir SRC_DIR [--dest-channel DEST_CHANNEL]
 
             This is for importing all of the days from a single channel in a Slack export, one file
             per day.  The Slack channel name can be inferred from the name of the src dir. The dest
             Discord channel is optional; if not present, it defaults to the same name as the src
             Slack channel.
 
-        --src_dirtree SRC_DIRTREE [--channel_file CHANNEL_FILE]
+        --src-dirtree SRC_DIRTREE [--channel-file CHANNEL_FILE]
 
             This is for importing all of the days from multiple (potentially all) channels in a
             Slack export. One dir per channel, and within each channel dir, one file per day. The
@@ -117,22 +117,22 @@ def check_config(config):
 
     ways = int(one_file) + int(one_channel) + int(multi_channels)
     if ways > 1:
-        exit_usage("--src_file (one file), --src_dir (one channel), --src_dirtree (multiple channels)"
+        exit_usage("--src-file (one file), --src-dir (one channel), --src-dirtree (multiple channels)"
                    " are all mutually exclusive")
     if ways == 0:
-        exit_usage("One (and only one) of --src_file (one file), --src_dir (one channel), or"
-                    "--src_dirtree (multiple channels) is required")
+        exit_usage("One (and only one) of --src-file (one file), --src-dir (one channel), or"
+                    "--src-dirtree (multiple channels) is required")
 
     if one_file and config.dest_channel is None:
-        exit_usage("--dest_channel is required with --src_file (one file)")
+        exit_usage("--dest-channel is required with --src-file (one file)")
 
     if multi_channels and config.dest_channel is not None:
-        exit_usage("--dest_channel is not allowed with --src_dirtree (multiple channels)."
-                   " It is only allowed with --src_file (one file) or --src_dir (one channel)")
+        exit_usage("--dest-channel is not allowed with --src-dirtree (multiple channels)."
+                   " It is only allowed with --src-file (one file) or --src-dir (one channel)")
 
     if config.channel_file and not multi_channels:
-        exit_usage("--channel_file is only allowed with --src_dirtree (multiple channels)."
-                   " It is not allowed with --src_file (one file) or --src_dir (one channel)")
+        exit_usage("--channel-file is only allowed with --src-dirtree (multiple channels)."
+                   " It is not allowed with --src-file (one file) or --src-dir (one channel)")
 
     if not config.token:
         exit_usage("Discord token is not set (cmd line arg, env var, or dot file)")
@@ -154,30 +154,30 @@ def get_config(argv):
                         " DISCORD_TOKEN env var, then .discord_token file in same dir as script."
                         " Must be set in one of these locations.")
 
-    parser.add_argument('--src_file',
+    parser.add_argument('--src-file',
                         required=False,
                         default=None,
                         help="Single source file for import from Slack (from one day of one"
                         " channel)")
 
-    parser.add_argument('--dest_channel',
+    parser.add_argument('--dest-channel',
                         required=False,
                         default=None,
                         help="Destination Discord channel (if only migrating one channel)")
 
-    parser.add_argument('--src_dir',
+    parser.add_argument('--src-dir',
                         required=False,
                         default=None,
                         help="Directory of source files for import from Slack (for all days from"
                         " one channel)")
 
-    parser.add_argument('--src_dirtree',
+    parser.add_argument('--src-dirtree',
                         required=False,
                         default=None,
                         help="Directory tree of source directories for import from Slack (from all"
                         " channels). This is the top level of the unzip'd Slack export.")
 
-    parser.add_argument('--channel_file',
+    parser.add_argument('--channel-file',
                         required=False,
                         default=None,
                         help="File containing list of Slack channels to port to Discord, with"
@@ -187,7 +187,7 @@ def get_config(argv):
                         required=False,
                         action='store_true')
 
-    parser.add_argument('-n', '--dry_run',
+    parser.add_argument('-n', '--dry-run',
                         required=False,
                         action='store_true')
 
