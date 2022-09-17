@@ -16,15 +16,18 @@ class DiscordClient(discord.Client):
     A Discord client for the purposes of importing the content of messages exported from Slack
     *Not* intended to be generic
     """
-    def __init__(self, token, channel_name, parsed_messages,
+    def __init__(self, token, parsed_messages,
                  verbose=False, dry_run=False,
                  **kwargs):
         self.token = token
-        self.channel_name = channel_name
+
+        # see SlackParser.parse() for details
         self.parsed_messages = parsed_messages
+        # a mapping of discord channel names to channel objects
+        self.channels = dict()
+
         self.verbose = verbose
         self.dry_run = dry_run
-        print(f"kwargs = {kwargs}")
 
         if 'intents' not in kwargs:
             kwargs['intents'] = discord.Intents(
@@ -56,52 +59,75 @@ class DiscordClient(discord.Client):
         """
         super().run(self.token)
 
-    async def post_messages(self):
+    async def set_channels(self):
         """
-        Iterate through the results of previously parsing the JSON file from a Slack export and post
-        each message to Discord in the channel corresponding to the given id. Threading is preserved.
-        """
-        logger.info("Waiting until ready")
-        await self.wait_until_ready()
-        logger.info(f"Ready. Posting messages to channel {self.channel_name}")
-        if self.verbose:
-            pprint(self.parsed_messages)
+        Check that all of the Discord channels to which we want to post exist.
 
-        try:
+        If the channel exists, populate an item mapping the channel name to the channel object in
+        the self.channels dict.
+
+        If any channel does not exist, raise an exception.
+        """
+        channel_names_from_export = self.parsed_messages.keys()
+        logger.info("Checking that all Discord channels to which we want to post exist:"
+                    f" {channel_names_from_export}")
+
+        # We are intentionally not wrapping the following Discord API call with `@discord_retry`.
+        # It's not in the actual repeated posting path, so we'd rather it fail fast and not retry.
+        # This is somewhat arbitrary, and it wouldn't be wrong to wrap it.
+        all_channels_from_server = list(self.get_all_channels())
+        logger.info("All channels on Discord server:"
+                    f" {[channel.name for channel in all_channels_from_server]}")
+
+        for channel_name in channel_names_from_export:
             channels = [channel
-                        for channel in self.get_all_channels()
-                        if channel.name == self.channel_name]
+                        for channel in all_channels_from_server
+                        if channel.name == channel_name]
             if not channels:
-                logger.error(f"Unable to find channel '{self.channel_name}'")
-                logger.warn("Will NOT be able to post messages")
-                # XXX need to think more about error handling.
-                #     should we raise RuntimeError in this case?
-                return
+                # XXX consider an option to support this in the future
+                logger.error(f"This script will not create Discord channels that do not exist: {channel_name}")
+                raise ValueError(f"Unable to find Discord channel {channel_name}")
 
             if len(channels) > 1:
-                logger.warn(f"Found multiple channels with the same name '{self.channel}': id {channel_ids}")
+                # I suspect this is not actually possible in practice
+                logger.warn(f"Found multiple Discord channels with the same name {channel}: id {channel_ids}")
                 logger.info("Will arbitrarily pick the first")
 
             channel = channels[0]
-            logger.info(f"Successfully got channel {channel} with id {channel.id}")
+            logger.info(f"Successfully got Discord channel {channel} with id {channel.id}")
             if not isinstance(channel, discord.TextChannel):
-                logger.warn(f"channel {channel} is NOT a TextChannel. This is not expected.")
+                logger.warn(f"Discord channel {channel} is NOT a TextChannel. This is not expected.")
 
-            for timestamp in sorted(self.parsed_messages.keys()):
-                (message, thread) = self.parsed_messages[timestamp]
-                sent_message = await self.send_msg_to_channel(channel, message)
-                logger.info(f"Message posted: {timestamp}")
+            self.channels[channel_name] = channel
 
-                if thread:
-                    created_thread = await self.create_thread(sent_message, f"thread{timestamp}")
-                    for timestamp_in_thread in sorted(thread.keys()):
-                        thread_message = thread[timestamp_in_thread]
-                        await self.send_msg_to_thread(created_thread, thread_message)
-                        logger.info(f"Message in thread posted: {timestamp_in_thread}")
+        logger.info(f"Successfully got all Discord channels to which we will be posting: {self.channels.keys()}")
+
+    async def post_messages(self):
+        """
+        Iterate through the results of previously parsed JSON files from a Slack export, and post
+        each message to Discord in the appropriate channel. Threading is preserved.
+
+        See SlackParser.parse() for the details of the format of the parsed messages dict.
+
+        This is the background task executed when the client runs.
+        """
+        logger.info("Waiting until ready")
+        await self.wait_until_ready()
+        logger.info(f"Ready. Begin posting all messages to all Discord channels.")
+        if self.verbose:
+            # This has the potential to be VERY verbose
+            pprint(self.parsed_messages)
+
+        try:
+            await self.set_channels()
+
+            for channel_name, channel_msgs_dict in self.parsed_messages.items():
+                channel = self.channels[channel_name]
+                await self.post_messages_to_channel(channel, channel_msgs_dict)
 
             # XXX maybe set a boolean to indicate success to the caller,
             #     if actual return values are hard?
-            logger.info("Done posting messages")
+            logger.info("Done posting messages to all Discord channels")
         except Exception as e:
             # Ideally this shouldn't happen
             # But when it does, esp. during development, this is helpful for debugging problems
@@ -112,6 +138,25 @@ class DiscordClient(discord.Client):
             print_exc()
         finally:
             await self.close()
+
+    async def post_messages_to_channel(self, channel, channel_msgs_dict):
+        logger.info(f"Begin posting messages to Discord channel {channel}")
+
+        for timestamp in sorted(channel_msgs_dict.keys()):
+            (message, thread) = channel_msgs_dict[timestamp]
+            sent_message = await self.send_msg_to_channel(channel, message)
+            logger.info(f"Message posted: {timestamp}")
+
+            if thread:
+                created_thread = await self.create_thread(sent_message, f"thread{timestamp}")
+                for timestamp_in_thread in sorted(thread.keys()):
+                    thread_message = thread[timestamp_in_thread]
+                    await self.send_msg_to_thread(created_thread, thread_message)
+                    logger.info(f"Message in thread posted: {timestamp_in_thread}")
+
+        # XXX maybe set a boolean to indicate success to the caller,
+        #     if actual return values are hard?
+        logger.info(f"Done posting messages to Discord channel {channel}")
 
     @decorator
     async def discord_retry(coro, desc="making discord HTTP API call", *args, **kwargs):

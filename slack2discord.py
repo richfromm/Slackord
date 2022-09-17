@@ -25,21 +25,19 @@ if __name__ == '__main__':
 
     config = get_config(argv)
 
-    # XXX this is a WIP
-    if config.src_dirtree:
-        raise NotImplementedError("--src_dirtree (multiple channels) not yet implemented")
-
     # parse either a single file (one day of one Slack channel),
     # or all of the files in a dir (all days for one Slack channel)
     parser = SlackParser(
         src_file=config.src_file,
         src_dir=config.src_dir,
         dest_channel=config.dest_channel,
+        src_dirtree=config.src_dirtree,
+        channel_file=config.channel_file,
         verbose=config.verbose)
     parser.parse()
 
-    # post the parsed messages to a Discord channel
-    client = DiscordClient(config.token, parser.dest_channel, parser.parsed_messages,
+    # post the parsed Slack messages to Discord channel(s)
+    client = DiscordClient(config.token, parser.parsed_messages,
                            verbose=config.verbose, dry_run=config.dry_run)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt
     # b/c it is caught by the run() loop in the discord client
