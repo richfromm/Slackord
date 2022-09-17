@@ -171,7 +171,12 @@ following manners. This is the order that is searched:
 
 #### Script invocation
 
-There are three different modes in which the script can be run:
+Briefly, the script is executed via:
+
+    ./slack2discord.py [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
+
+The src and dest related options can be specified in one of three different
+ways:
 
 * `--src-file SRC_FILE --dest-channel DEST_CHANNEL`
 

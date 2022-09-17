@@ -16,7 +16,7 @@ DESCRIPTION = dedent(
 
 USAGE = dedent(
     f"""
-    {argv[0]} [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-test-related-options>
+    {argv[0]} [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
     src and dest related options must follow one of the following mutually exclusive formats:
 
