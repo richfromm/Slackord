@@ -1,73 +1,240 @@
 # slack2discord
 
-This repo has hard forked (from Slackord) and is in the process of a
-significant refactoring. The new repo is slack2discord
+A Discord client that imports Slack-exported JSON chat history to
+Discord channel(s).
 
-This README will be updated when that effort is complete.
+## tl;dr
 
-For now, significant help is available via:
-    ```
-    ./slack2discord.py --help
-    ```
+See [Script invocation](#script-invocation) below.
+
+## History
+
+This started out as
+[thomasloupe/Slackord](https://github.com/thomasloupe/Slackord). I
+made some contributions (see
+[#7](https://github.com/thomasloupe/Slackord/pull/7) and
+[#9](https://github.com/thomasloupe/Slackord/pull/9)) to add support
+for threads. But then my list of additional proposed
+[changes](https://github.com/thomasloupe/Slackord/issues/8) was
+significant enough, that we mutually decided that me continuing
+development on a hard fork would be better.
+
+Note that there also exists a .NET version
+[thomasloupe/Slackord2](https://github.com/thomasloupe/Slackord2) by the
+original author, that contains additional functionality and appears to be more
+actively maintained than the upstream fork from which this Python project
+originates.
 
 ## Prereqs
 
-Install the following into a Python virtualenv:
-    ```
+### virtualenv
+
+Install `discord.py` ([pypi](https://pypi.org/project/discord.py/),
+[homepage](https://github.com/Rapptz/discord.py),
+[docs](https://discordpy.readthedocs.io/en/latest/)) (_yes, there
+really is a `.py` included in the package name_) and `decorator`
+([pypi](https://pypi.org/project/decorator/),
+[homepage](https://github.com/micheles/decorator),
+[docs](https://github.com/micheles/decorator/blob/master/docs/documentation.md))
+packages into a Python virtualenv:
+
     pip install discord.py decorator
-    ```
 
-# XXX OUT OF DATE XXX
+For help creating virtual environments, see the
+[venv](https://docs.python.org/3/library/venv.html) docs. If you use Python a
+lot, you may also want to consider
+[virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/). If you
+don't want to think much about virtual envs and just want simple Python scripts
+to work, you could consider [pyv](https://github.com/richfromm/pyv).
 
-# Please note: Slackord 2 is out! 
-You can get it here: https://github.com/thomasloupe/Slackord2
+### py3
 
-# Slackord 1.0 by Thomas Loupe
+This assumes Python 3.0. Python 2.x was EOL'd at the beginning of
+2020, and no new project should be using it.
 
-A Discord bot that imports Slack-exported JSON chat history to a Discord channel.
-Download the latest executable here: https://github.com/thomasloupe/Slackord/releases/.
+## Usage
 
-Alternatively, you can download the slackord.py script here and run it directly in Python: https://github.com/thomasloupe/Slackord/blob/master/slackord.py.
+### Slack export
 
-# Instructions:
+To export your Slack data as JSON files, see the article at
+<https://slack.com/help/articles/201658943-Export-your-workspace-data>
 
-1. Export your Slack data as JSON.  Note that only public channels are
-   included if you have the Free or Pro version. You need a Business+
-   or Enterprise Grid plan to export private channels and direct
-   messages (DMs).
-   https://slack.com/help/articles/201658943-Export-your-workspace-data
-1. Set up Discord bot and create a token here https://discordapp.com/developers/applications/.
-1. Clone this repo or download the python file. `git clone `
-1. Make sure you've installed Python3+ from https://www.python.org/downloads/. Tkinter comes bundled with Mac/Windows Python releases.
-1. Install the Discord python wrapper/tk:
+Note that only workspace owners/admins and org owners/admins can use this
+feature. While this is available on all plans, only public channels are included
+if you have the Free or Pro version. You need a Business+ or Enterprise Grid
+plan to export private channels and direct messages (DMs).
 
-    Ubuntu:
-    ```
-    sudo apt-get install -y python3 python3-pip python-tk; python3 -m pip install discord.py
-    ```
+I also think (but am not 100% positive) that the export has the same 90 day
+limit of history imposed on Free plans as of 1 September 2022. (This change was
+what motivated me to migrate from Slack to Discord and work on this tool.)
 
-    RHEL/Centos:
-    ```
-    sudo yum install -y python3 tkinter python3-pip; python3 -m pip install discord.py
-    ```
+If it is a large export, this might take a while. Slack will notify you when it
+is done.
 
-    Mac:
-    ```
-    sudo curl https://bootstrap.pypa.io/get-pip.py | python3; pip3 install discord.py
-    ```
-    or if using Homebrew:
-    ```
-    brew install python-tk.
-    ```
+The export is in the form of a zip file. Download it, and unzip it.
 
-    Windows:
-    ```
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-    python get-pip.py
-    pip install discord.py
-    ```
+The contents include dirs at the top level, one for each channel. Within each
+dir is one or more JSON files, of the form _`YYYY-MM-DD.json`_, one for each day
+in which there are messages for that channel. Like so:
 
-1. Run the Slackord executable file, or run Python script by with `python3 slackord.py`, or `py slackord.py`.
-1. Click "Import JSON File", browse and select the Slack chat file you wish to import to Discord.
-1. Click "Enter Bot Token" and paste your bot's token into the field and press enter.
-1. Enter any Discord channel and type !slackord. Messages will now post to that channel.
+```
+channel1
+ |- 2022-01-01.json
+ |- 2022-01-02.json
+ |- ...
+channel2
+ |- 2022-01-01.json
+ |- 2022-01-02.json
+ |- ...
+...
+```
+
+There is additionally some metadata contained in JSON files at the top level,
+but they are not (currently) used by this script, and are not shown above.
+
+### Discord import
+
+#### One time setup
+
+For complete instructions, see <https://discordpy.readthedocs.io/en/stable/discord.html>
+
+1. Login to the Discord website and go to the Applications page:
+
+   <https://discordapp.com/developers/applications/>
+
+1. Create a new application. See the implications below (in creating a
+   bot) of choosing an application name that contains the phrase
+   "discord" (like "slack2discord").
+
+   New Application -> Name -> **Create**
+
+1. Optionally enter a description. For example:
+
+   Applications -> Settings -> General Information -> Description
+
+   > A Discord client that imports Slack-exported JSON chat history to Discord
+   channel(s).
+
+   **Save Changes**
+
+1. Create a bot
+
+   Applications -> Settings -> Bot -> Build-A-Bot -> **Add Bot** -> **Yes, do it!**
+
+1. Unfortunately, if you named your App "slack2discord", Discord
+   disallows the use of the phrase "discord" within a username. So
+   the Username prefix (before the number) will default to
+   "slack2". If you don't like that, you can choose something else:
+
+   Applications -> Settings -> Bot -> Build-A-Bot -> Username
+
+   like "slack2disc0rd".
+
+1. Create a token:
+
+   Applications -> Settings -> Bot -> Build-A-Bot -> Token -> **Reset Token** -> **Yes, do it!**
+
+   **Copy the token now, as it will not be shown again.** This is used below.
+
+   (Don't worry if you mess this up, you can always just repeat this step to
+   create a new token.)
+
+1. Invite the bot to your Discord server:
+
+   Applications -> Settings -> OAuth2 -> URL Generator -> Scopes: check "**bot**"
+
+   Bot permissions -> Text permissions:
+
+   check: "**Send Messages**", "**Create Public Threads**", "**Create Private Threads**"
+
+   This will create a URL that you can use to add the bot to your server.
+
+    * Go to Generated URL
+    * Copy the URL
+    * Paste into your browser
+    * Login if requested
+    * Select your Discord server, and authorize the external application to
+       access your Discord account.
+    * -> **Continue** -> **Authorize**
+    * Do the Captcha if requested
+    * Close the browser tab
+
+#### Discord token
+
+The Discord token (created for your bot above) must be specified in one of the
+following manners. This is the order that is searched:
+
+1. On the command line with `--token TOKEN`
+1. Via the `DISCORD_TOKEN` env var
+1. Via a `.discord_token` file placed in the same dir as the
+   `slack2discord.py` script.
+
+#### Script invocation
+
+Briefly, the script is executed via:
+
+    ./slack2discord.py [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
+
+The src and dest related options can be specified in one of three different
+ways:
+
+* `--src-file SRC_FILE --dest-channel DEST_CHANNEL`
+
+    This is for importing a single file from a Slack export, that
+    corresponds to a single day of a single channel.
+
+* `--src-dir SRC_DIR [--dest-channel DEST_CHANNEL]`
+
+    This is for importing all of the days from a single channel in a
+    Slack export, one file per day.
+
+* `--src-dirtree SRC_DIRTREE [--channel-file CHANNEL_FILE]`
+
+    This is for importing all of the days from multiple (potentially
+    all) channels in a Slack export. One dir per channel, and within
+    each channel dir, one file per day.
+
+For more details, and complete descriptions of all command line
+options, execute:
+
+    ./slack2discord.py --help
+
+## Internals
+
+The Discord Python API uses
+[asyncio](https://docs.python.org/3/library/asyncio.html), so there is the
+potential to speed up the overall execution time by having multiple Discord HTTP
+API calls execute in parallel. I have intentionally chosen to not do this.
+
+Within a single channel, we want all of the messages in the channel (and all of
+the messages within a thread) to be posted in order of timestamp, so that is a
+reason to serialize those.
+
+A better argument could be made for parallelizing posting to multiple
+channels. I decided that, at least for the time being, it would be far easier to
+reason about errors (and potentially restart a failed script, although no such
+restart support is currently included) if only one channel was imported at a
+time.
+
+## Future work
+
+Some items I am considering:
+
+* Optionally automatically create destination channels in Discord if
+  they do not already exist.
+
+* Minimally transform non-standard Slack Markdown as needed to conform
+  to Discord Markdown.
+
+* Deal with external links in Discord, showing the same preview title,
+  heading, text, and image that Slack does.
+
+* Better error reporting, so that if an entire export is not
+  successful, it is easier to resume in a way as to avoid duplicates.
+
+* Add mypy type hints.
+
+* Add unit tests
+
+Feel free to open issues in GitHub if there are any other features you
+would like to see.
