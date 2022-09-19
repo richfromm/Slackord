@@ -6,7 +6,7 @@
 
 Major refactoring, with additional functionality
 
-* Remove tkinter
+* Remove GUI (tkinter)
 * Rename Slackord to slack2discord
 * Use Python logging
 * Remove Discord bot command, use Discord client instead

@@ -56,9 +56,8 @@ This assumes Python 3.0. Python 2.x was EOL'd at the beginning of
 
 ### Slack export
 
-To export your Slack data as JSON files, see the article [Export your
-workspace
-data](https://slack.com/help/articles/201658943-Export-your-workspace-data).
+To export your Slack data as JSON files, see the article at
+<https://slack.com/help/articles/201658943-Export-your-workspace-data>
 
 Note that only workspace owners/admins and org owners/admins can use this
 feature. While this is available on all plans, only public channels are included
@@ -105,22 +104,22 @@ For complete instructions, see <https://discordpy.readthedocs.io/en/stable/disco
 
 1. Create a new application. See the implications below (in creating a
    bot) of choosing an application name that contains the phrase
-   "discord".
+   "discord" (like "slack2discord").
 
-   New Application -> Name -> Create
+   New Application -> Name -> **Create**
 
 1. Optionally enter a description. For example:
 
-   Applications -> Settings -> General Information -> Description:
+   Applications -> Settings -> General Information -> Description
 
    > A Discord client that imports Slack-exported JSON chat history to Discord
    channel(s).
 
-   Save Changes
+   **Save Changes**
 
 1. Create a bot
 
-   Applications -> Settings -> Bot -> Build-A-Bot -> Add Bot -> Yes, do it!
+   Applications -> Settings -> Bot -> Build-A-Bot -> **Add Bot** -> **Yes, do it!**
 
 1. Unfortunately, if you named your App "slack2discord", Discord
    disallows the use of the phrase "discord" within a username. So
@@ -129,11 +128,11 @@ For complete instructions, see <https://discordpy.readthedocs.io/en/stable/disco
 
    Applications -> Settings -> Bot -> Build-A-Bot -> Username
 
-   like "slackimporter".
+   like "slack2disc0rd".
 
 1. Create a token:
 
-   Applications -> Settings -> Bot -> Build-A-Bot -> Token -> Reset Token -> Yes, do it!
+   Applications -> Settings -> Bot -> Build-A-Bot -> Token -> **Reset Token** -> **Yes, do it!**
 
    **Copy the token now, as it will not be shown again.** This is used below.
 
@@ -142,23 +141,23 @@ For complete instructions, see <https://discordpy.readthedocs.io/en/stable/disco
 
 1. Invite the bot to your Discord server:
 
-   Applications -> Settings -> OAuth2 -> URL Generator -> Scopes: check "bot"
+   Applications -> Settings -> OAuth2 -> URL Generator -> Scopes: check "**bot**"
 
    Bot permissions -> Text permissions:
 
-   check: "Send Messages", "Create Public Threads", "Create Private Threads"
+   check: "**Send Messages**", "**Create Public Threads**", "**Create Private Threads**"
 
    This will create a URL that you can use to add the bot to your server.
 
-    1. Go to Generated Url
-    1. Copy the URL
-    1. Paste into your browser
-    1. Login if requested
-    1. Select your Discord server, and authorize the external application to
+    * Go to Generated URL
+    * Copy the URL
+    * Paste into your browser
+    * Login if requested
+    * Select your Discord server, and authorize the external application to
        access your Discord account.
-    1. -> Continue -> Authorize
-    1. Do the Captcha if requested
-    1. Close the browser tab
+    * -> **Continue** -> **Authorize**
+    * Do the Captcha if requested
+    * Close the browser tab
 
 #### Discord token
 
@@ -200,6 +199,23 @@ options, execute:
 
     ./slack2discord.py --help
 
+## Internals
+
+The Discord Python API uses
+[asyncio](https://docs.python.org/3/library/asyncio.html), so there is the
+potential to speed up the overall execution time by having multiple Discord HTTP
+API calls execute in parallel. I have intentionally chosen to not do this.
+
+Within a single channel, we want all of the messages in the channel (and all of
+the messages within a thread) to be posted in order of timestamp, so that is a
+reason to serialize those.
+
+A better argument could be made for parallelizing posting to multiple
+channels. I decided that, at least for the time being, it would be far easier to
+reason about errors (and potentially restart a failed script, although no such
+restart support is currently included) if only one channel was imported at a
+time.
+
 ## Future work
 
 Some items I am considering:
@@ -217,6 +233,8 @@ Some items I am considering:
   successful, it is easier to resume in a way as to avoid duplicates.
 
 * Add mypy type hints.
+
+* Add unit tests
 
 Feel free to open issues in GitHub if there are any other features you
 would like to see.
