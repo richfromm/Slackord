@@ -4,7 +4,6 @@ import logging
 from os import listdir
 from os.path import basename, join, isdir
 from re import match
-import time
 
 
 logger = logging.getLogger(__name__)
