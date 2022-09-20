@@ -173,7 +173,8 @@ following manners. This is the order that is searched:
 
 Briefly, the script is executed via:
 
-    ./slack2discord.py [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
+    ./slack2discord.py [--token TOKEN] [--server SERVER] \
+        [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
 The src and dest related options can be specified in one of three different
 ways:

@@ -16,7 +16,8 @@ DESCRIPTION = dedent(
 
 USAGE = dedent(
     f"""
-    {argv[0]} [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
+    {argv[0]} [--token TOKEN] [--server SERVER] \\
+        [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
     src and dest related options must follow one of the following mutually exclusive formats:
 
@@ -151,6 +152,12 @@ def get_config(argv):
                         " If not set via command line option, will search in order in"
                         " DISCORD_TOKEN env var, then .discord_token file in same dir as script."
                         " Must be set in one of these locations.")
+
+    parser.add_argument('--server',
+                        required=False,
+                        help="Name of Discord server. Not needed in the common case where your bot"
+                        " is only a member of a single server. Only needed if Discord server"
+                        " disambiguation is required.")
 
     parser.add_argument('--src-file',
                         required=False,

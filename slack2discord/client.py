@@ -16,13 +16,16 @@ class DiscordClient(discord.Client):
     A Discord client for the purposes of importing the content of messages exported from Slack
     *Not* intended to be generic
     """
-    def __init__(self, token, parsed_messages,
+    def __init__(self, token, parsed_messages, server_name=None,
                  verbose=False, dry_run=False,
                  **kwargs):
         self.token = token
 
         # see SlackParser.parse() for details
         self.parsed_messages = parsed_messages
+        # name if Discord server. internally referred to as "guild".
+        # optional, not needed if this client is only a member of one guild.
+        self.server_name = server_name
         # a mapping of discord channel names to channel objects
         self.channels = dict()
 
@@ -72,31 +75,54 @@ class DiscordClient(discord.Client):
         logger.info("Checking that all Discord channels to which we want to post exist:"
                     f" {channel_names_from_export}")
 
-        # We are intentionally not wrapping the following Discord API call with `@discord_retry`.
-        # It's not in the actual repeated posting path, so we'd rather it fail fast and not retry.
-        # This is somewhat arbitrary, and it wouldn't be wrong to wrap it.
-        all_channels_from_server = list(self.get_all_channels())
-        logger.info("All channels on Discord server:"
-                    f" {[channel.name for channel in all_channels_from_server]}")
+        # use self.guilds rather than self.fetch_guilds() to avoid an unnecessary API call
+        if self.server_name:
+            guilds = [guild
+                      for guild in self.guilds
+                      if guild.name == self.server_name]
+            xtra_error_str = f" with name {self.server_name}"
+        else:
+            guilds = self.guilds
 
+        if not guilds:
+            error_msg = f"Unable to find Discord server{xtra_error_str}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+
+        if len(guilds) > 1:
+            # I suspect this may not actually be possible in practice
+            error_msg = (f"Unable to find unique Discord server{xtra_error_str}:"
+                         f" {[guild.name for guild in guilds]}")
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+
+        guild = guilds[0]
+        logger.info(f"Successfully got Discord server {guild} with id {guild.id}")
+
+        # limit search to text channels, b/c the import doesn't support voice
+        # use guild.text_channels rather than self.get_all_channels() to avoid an unnecessary API call
+        logger.info("All text channels on Discord server:"
+                    f" {[channel.name for channel in guild.text_channels]}")
         for channel_name in channel_names_from_export:
             channels = [channel
-                        for channel in all_channels_from_server
+                        for channel in guild.text_channels
                         if channel.name == channel_name]
             if not channels:
                 # XXX consider an option to support this in the future
                 logger.error(f"This script will not create Discord channels that do not exist: {channel_name}")
-                raise ValueError(f"Unable to find Discord channel {channel_name}")
+                raise RuntimeError(f"Unable to find Discord channel {channel_name}")
 
             if len(channels) > 1:
-                # I suspect this is not actually possible in practice
-                logger.warn(f"Found multiple Discord channels with the same name {channel}: id {channel_ids}")
-                logger.info("Will arbitrarily pick the first")
+                # I suspect this may not actually be possible in practice
+                error_msg = f"Found multiple Discord channels with the same name {channel}: id {channel_ids}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
 
             channel = channels[0]
+            # b/c we limited the search to guild.text_channels above
+            assert isinstance(channel, discord.TextChannel), (
+                f"Discord channel {channel} is NOT a TextChannel. This should not happen.")
             logger.info(f"Successfully got Discord channel {channel} with id {channel.id}")
-            if not isinstance(channel, discord.TextChannel):
-                logger.warn(f"Discord channel {channel} is NOT a TextChannel. This is not expected.")
 
             self.channels[channel_name] = channel
 
