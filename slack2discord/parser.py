@@ -132,8 +132,8 @@ class SlackParser():
                             if slack_channel not in all_slack_channels:
                                 raise ValueError(
                                     f"Slack channel {slack_channel} from channel file"
-                                    " {self.channel_file} is not in the slack export at"
-                                    " {self.src_dirtree}")
+                                    f" {self.channel_file} is not in the slack export at"
+                                    f" {self.src_dirtree}")
                             if len(fields) == 1:
                                 # slack channel only, discord channel is same
                                 self.channel_map[slack_channel] = slack_channel
