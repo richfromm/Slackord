@@ -143,18 +143,22 @@ For complete instructions, see <https://discordpy.readthedocs.io/en/stable/disco
 
    Applications -> Settings -> OAuth2 -> URL Generator -> Scopes: check "**bot**"
 
+   Bot permissions -> General permissions:
+
+   check: "**Manage Channels**"
+
    Bot permissions -> Text permissions:
 
-   check: "**Send Messages**", "**Create Public Threads**", "**Create Private Threads**"
+   additionally check: "**Send Messages**", "**Create Public Threads**", "**Send Messages in Threads**"
 
    This will create a URL that you can use to add the bot to your server.
 
-    * Go to Generated URL
-    * Copy the URL
+    * Go to **Generated URL**
+    * **Copy** the URL
     * Paste into your browser
     * Login if requested
     * Select your Discord server, and authorize the external application to
-       access your Discord account.
+       access your Discord account, confirming the above permissions.
     * -> **Continue** -> **Authorize**
     * Do the Captcha if requested
     * Close the browser tab
@@ -230,7 +234,7 @@ Some items I am considering:
 * Deal with external links in Discord, showing the same preview title,
   heading, text, and image that Slack does.
 
-* Better error reporting, so that if an entire export is not
+* Better error reporting, so that if an entire import is not
   successful, it is easier to resume in a way as to avoid duplicates.
 
 * Add mypy type hints.
