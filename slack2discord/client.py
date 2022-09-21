@@ -65,25 +65,24 @@ class DiscordClient(discord.Client):
         """
         super().run(self.token)
 
-    async def set_channels(self):
+    def get_guild(self, guild_name=None):
         """
-        Check that all of the Discord channels to which we want to post exist.
+        Get the appropriate guild (aka server).
 
-        If the channel exists, populate an item mapping the channel name to the channel object in
-        the self.channels dict.
+        If a name is supplied, use that to match. Otherwise, just check the list of available
+        guilds.
 
-        If any channel does not exist, raise an exception.
+        We expect one and only one matching result. Return it, as a discord.Guild object.
+        https://discordpy.readthedocs.io/en/latest/api.html#guild
+
+        Otherwise, raise a RuntimeError.
         """
-        channel_names_from_export = self.parsed_messages.keys()
-        logger.info("Checking that all Discord channels to which we want to post exist:"
-                    f" {channel_names_from_export}")
-
         # use self.guilds rather than self.fetch_guilds() to avoid an unnecessary API call
         if self.server_name:
             guilds = [guild
                       for guild in self.guilds
-                      if guild.name == self.server_name]
-            xtra_error_str = f" with name {self.server_name}"
+                      if guild.name == guild_name]
+            xtra_error_str = f" with name {guild_name}"
         else:
             guilds = self.guilds
 
@@ -102,64 +101,131 @@ class DiscordClient(discord.Client):
         guild = guilds[0]
         logger.info(f"Successfully got Discord server {guild} with id {guild.id}")
 
+        return guild
+
+    def get_category(self, guild, category_name):
+        """
+        Get the category with the specified name.
+
+        We expect one and only one matching result. Return it, as a discord.CategoryChannel object.
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.CategoryChannel
+
+        If we find multiple results, somewhat arbitrarily return the first.
+
+        If we find no results, return None
+        """
+        categories = [category
+                      for category in guild.categories
+                      if category.name == category_name]
+        if not categories:
+            # Uncategorized channels appear separately in the Discord GUI
+            logger.warn("Unable to find category with name {category_name}")
+            category = None
+        else:
+            if len(categories) > 1:
+                # I suspect this is not actually possible in practice
+                logger.warn("Found multiple categories with name {category_name}, will arbitrarily"
+                            " pick the first")
+            category = categories[0]
+
+        return category
+
+    async def create_text_channel(self, guild, channel_name, dry_run=False):
+        """
+        Create a new text channel with the specified name.
+
+        Return it, as a discord.TextChannel object.
+        https://discordpy.readthedocs.io/en/latest/api.html#textchannel
+
+        In the dry run case, return None.
+        """
+        logger.info(f"Creating missing Discord channel: {channel_name}")
+        # We are intentionally not wrapping the following Discord API call with
+        # `@discord_retry`. It's not in the actual repeated posting path, so we'd rather it
+        # fail fast and not retry. This is somewhat arbitrary, and it wouldn't be wrong to
+        # wrap it.
+        if dry_run:
+            logger.info(f"DRY_RUN: guild.create_text_channel({channel_name})")
+            channel = None
+        else:
+            text_channels_category = self.get_category(guild, 'Text Channels')
+            if not text_channels_category:
+                logger.warn("Unable to find category for text channels, new channel will"
+                            " not be in a category")
+
+            channel = await guild.create_text_channel(channel_name, category=text_channels_category)
+            assert(channel.name == channel_name, f"New channel has unexpected name: {channel.name}")
+
+        return channel
+
+    async def get_channel(self, guild, channel_name,
+                          create=False, dry_run=False):
+        """
+        Get the channel with the specified name.
+
+        Return it, as a discord.TextChannel object.
+        https://discordpy.readthedocs.io/en/latest/api.html#textchannel
+
+        Optionally create the channel if it does not exist.
+
+        If the create option is not selected, and the channel does not exist, raise a RuntimeError.
+
+        In the dry run creation case, return None.
+        """
+        channels = [channel
+                    for channel in guild.text_channels
+                    if channel.name == channel_name]
+        if not channels:
+            if not create:
+                error_msg = f"Unable to find Discord channel {channel_name}, use --create to auto create"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
+            channel = await self.create_text_channel(guild, channel_name, dry_run=dry_run)
+
+        elif len(channels) > 1:
+            # I suspect this may not actually be possible in practice
+            error_msg = f"Found multiple Discord channels with the same name {channel}: id {channel_ids}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+
+        else:
+            channel = channels[0]
+
+        # skip this if there is no channel and it's a dry run, which only makes sense in the
+        # created channel case
+        if not(channel is None and create and dry_run):
+            # b/c we limited the search to guild.text_channels above
+            assert isinstance(channel, discord.TextChannel), (
+                f"Discord channel {channel} is NOT a TextChannel. This should not happen.")
+            logger.info(f"Successfully got Discord channel {channel} with id {channel.id}")
+
+        return channel
+
+    async def set_channels(self):
+        """
+        Check that all of the Discord channels to which we want to post exist.
+
+        If the channel exists, populate an item mapping the channel name to the channel object in
+        the self.channels dict.
+
+        If any channel does not exist, either create it, or raise an exception, depending on
+        whether the option was selected to create missing channels.
+        """
+        channel_names_from_export = self.parsed_messages.keys()
+        logger.info("Checking that all Discord channels to which we want to post exist:"
+                    f" {channel_names_from_export}")
+
+        guild = self.get_guild(self.server_name)
+
         # limit search to text channels, b/c the import doesn't support voice
         # use guild.text_channels rather than self.get_all_channels() to avoid an unnecessary API call
         logger.info("All text channels on Discord server:"
                     f" {[channel.name for channel in guild.text_channels]}")
+
         for channel_name in channel_names_from_export:
-            channels = [channel
-                        for channel in guild.text_channels
-                        if channel.name == channel_name]
-            if not channels:
-                if not self.create_channels:
-                    error_msg = f"Unable to find Discord channel {channel_name}, use --create to auto create"
-                    logger.error(error_msg)
-                    raise RuntimeError(error_msg)
-
-                logger.info(f"Creating missing Discord channel: {channel_name}")
-                # We are intentionally not wrapping the following Discord API call with
-                # `@discord_retry`. It's not in the actual repeated posting path, so we'd rather it
-                # fail fast and not retry. This is somewhat arbitrary, and it wouldn't be wrong to
-                # wrap it.
-                if self.dry_run:
-                    logger.info(f"DRY_RUN: guild.create_text_channel({channel_name})")
-                    channel = None
-                else:
-                    text_channels_categories = [category
-                                                for category in guild.categories
-                                                if category.name == 'Text Channels']
-                    if not text_channels_categories:
-                        # Uncategorized channels appear separately in the Discord GUI
-                        logger.warn("Unable to find category for text channels, new channel will"
-                                    " not be in a category")
-                        text_channels_category = None
-                    else:
-                        if len(text_channels_categories) > 1:
-                            # I suspect this is not actually possible in practice
-                            logger.warn("Found multiple categories for text channels, will"
-                                        " arbitrarily pick the first")
-                        text_channels_category = text_channels_categories[0]
-
-                    channel = await guild.create_text_channel(channel_name, category=text_channels_category)
-                    assert(channel.name == channel_name, f"New channel has unexpected name: {channel.name}")
-
-            elif len(channels) > 1:
-                # I suspect this may not actually be possible in practice
-                error_msg = f"Found multiple Discord channels with the same name {channel}: id {channel_ids}"
-                logger.error(error_msg)
-                raise RuntimeError(error_msg)
-
-            else:
-                channel = channels[0]
-
-            # skip this if there is no channel and it's a dry run, which only makes sense in the
-            # created channel case
-            if not(channel is None and self.create_channels and self.dry_run):
-                # b/c we limited the search to guild.text_channels above
-                assert isinstance(channel, discord.TextChannel), (
-                    f"Discord channel {channel} is NOT a TextChannel. This should not happen.")
-                logger.info(f"Successfully got Discord channel {channel} with id {channel.id}")
-
+            channel = await self.get_channel(guild, channel_name,
+                                             create=self.create_channels, dry_run=self.dry_run)
             self.channels[channel_name] = channel
 
         logger.info(f"Successfully got all Discord channels to which we will be posting: {self.channels.keys()}")
