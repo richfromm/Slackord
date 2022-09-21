@@ -153,6 +153,8 @@ class DiscordClient(discord.Client):
                 logger.warn("Unable to find category for text channels, new channel will"
                             " not be in a category")
 
+            # This requires the "Manage Channels" permission
+            # https://discordpy.readthedocs.io/en/latest/api.html#discord.Guild.create_text_channel
             channel = await guild.create_text_channel(channel_name, category=text_channels_category)
             assert(channel.name == channel_name, f"New channel has unexpected name: {channel.name}")
 
@@ -209,8 +211,8 @@ class DiscordClient(discord.Client):
         If the channel exists, populate an item mapping the channel name to the channel object in
         the self.channels dict.
 
-        If any channel does not exist, either create it, or raise an exception, depending on
-        whether the option was selected to create missing channels.
+        If any channel does not exist, either create it, or raise a RuntimeError, depending on
+        whether the config option was selected to create missing channels.
         """
         channel_names_from_export = self.parsed_messages.keys()
         logger.info("Checking that all Discord channels to which we want to post exist:"

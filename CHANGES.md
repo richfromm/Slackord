@@ -10,6 +10,7 @@
       member of multiple servers.
 * Add the option to create missing Discord destination channels
     * Via optional `--create` command line argument
+        * Creating channels requires the "Manage Channels" permission
     * The default is to still fail if a channel does not exist
 
 ### 2.0
