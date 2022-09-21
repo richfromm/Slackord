@@ -225,9 +225,6 @@ time.
 
 Some items I am considering:
 
-* Optionally automatically create destination channels in Discord if
-  they do not already exist.
-
 * Minimally transform non-standard Slack Markdown as needed to conform
   to Discord Markdown.
 
