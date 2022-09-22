@@ -16,7 +16,8 @@ DESCRIPTION = dedent(
 
 USAGE = dedent(
     f"""
-    {argv[0]} [--token TOKEN] [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
+    {argv[0]} [--token TOKEN] [--server SERVER] [--create] \\
+        [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
     src and dest related options must follow one of the following mutually exclusive formats:
 
@@ -108,6 +109,9 @@ def check_config(config):
     The Discord token can also be set in various was (see get_token()), but ultimately it must be
     set.
     """
+    if config.verbose:
+        logger.info(f"config = {config}")
+
     # These are all mutually exclusive
     one_file = config.src_file is not None
     one_channel = config.src_dir is not None
@@ -151,6 +155,18 @@ def get_config(argv):
                         " If not set via command line option, will search in order in"
                         " DISCORD_TOKEN env var, then .discord_token file in same dir as script."
                         " Must be set in one of these locations.")
+
+    parser.add_argument('--server',
+                        required=False,
+                        help="Name of Discord server. Not needed in the common case where your bot"
+                        " is only a member of a single server. Only needed if Discord server"
+                        " disambiguation is required.")
+
+    parser.add_argument('--create',
+                        required=False,
+                        action='store_true',
+                        help="Optionally create any destination Discord text channel if it does not"
+                        " exist. Default behavior is to fail if destination channel is missing.")
 
     parser.add_argument('--src-file',
                         required=False,

@@ -37,8 +37,10 @@ if __name__ == '__main__':
     parser.parse()
 
     # post the parsed Slack messages to Discord channel(s)
-    client = DiscordClient(config.token, parser.parsed_messages,
-                           verbose=config.verbose, dry_run=config.dry_run)
+    client = DiscordClient(
+        token=config.token, parsed_messages=parser.parsed_messages,
+        server_name=config.server, create_channels=config.create,
+        verbose=config.verbose, dry_run=config.dry_run)
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt
     # b/c it is caught by the run() loop in the discord client
     client.run()

@@ -2,6 +2,17 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
+### 2.1
+
+* Add optional `--server SERVER` command line argument
+    * This is the name of the Discord server (aka guild). This is only
+      needed in the (presumably) uncommon case in which your bot is a
+      member of multiple servers.
+* Add the option to create missing Discord destination channels
+    * Via optional `--create` command line argument
+        * Creating channels requires the "Manage Channels" permission
+    * The default is to still fail if a channel does not exist
+
 ### 2.0
 
 Major refactoring, with additional functionality
