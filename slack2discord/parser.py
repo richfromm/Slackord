@@ -235,8 +235,8 @@ class SlackParser():
                          for filename in listdir(path=channel_dir)
                          if SlackParser.is_slack_export_filename(filename)]
             if not filenames:
-                logger.warn("Unable to find any slack export JSON files for slack channel"
-                            f" {slack_channel} in dir {channel_dir}")
+                logger.warning("Unable to find any slack export JSON files for slack channel"
+                               f" {slack_channel} in dir {channel_dir}")
                 # XXX or should this be fatal and raise an Exception ?
                 return
 
@@ -273,14 +273,15 @@ class SlackParser():
         logger.info(f"Parsing Slack export JSON file: {filename}")
 
         if not SlackParser.is_slack_export_filename(filename):
-            logger.warn(f"Filename is not named as expected, will try to parse anyway: {filename}")
+            logger.warning("Filename is not named as expected, will try to parse anyway:"
+                           f" {filename}")
 
         with open(filename) as _file:
             for message in json.load(_file):
                 if message.get('type') == 'message':
                     if 'ts' not in message:
                         # According to the docs, 'ts' should always be present
-                        logger.warn("Message is missing timestamp, skipping.")
+                        logger.warning("Message is missing timestamp, skipping.")
                         continue
 
                     timestamp = float(message['ts'])
@@ -303,8 +304,9 @@ class SlackParser():
                             # can't find the root of the thread to which this message belongs
                             # ideally this shouldn't happen
                             # but it could if you have a long enough message history not captured in the exported file
-                            logger.warning(f"Can't find thread with timestamp {thread_timestamp} for message with timestamp {timestamp},"
-                                           " creating synthetic thread")
+                            logger.warning(f"Can't find thread with timestamp {thread_timestamp} for"
+                                           f" message with timestamp {timestamp}, creating"
+                                           " synthetic thread")
                             fake_message_text = SlackParser.format_message(
                                 thread_timestamp, None, '_Unable to find start of exported thread_')
                             channel_msgs_dict[thread_timestamp] = (fake_message_text, dict())
