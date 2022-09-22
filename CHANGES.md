@@ -2,6 +2,14 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
+### 2.2
+
+* Better processing of name within Slack messages
+    * Use a searchlist covering display name, real name, and user
+    * This handles the bot case with no user profile
+    * This fixes
+      [issue#13](https://github.com/richfromm/slack2discord/issues/13)
+
 ### 2.1
 
 * Add optional `--server SERVER` command line argument

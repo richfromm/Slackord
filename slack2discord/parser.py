@@ -50,9 +50,9 @@ class SlackParser():
         return datetime.fromtimestamp(timestamp).isoformat(sep=' ', timespec='seconds')
 
     @staticmethod
-    def format_message(timestamp, real_name, message):
+    def format_message(timestamp, name, message):
         """
-        Given a timestamp, real name, and message from slack,
+        Given a timestamp, name, and message from slack,
         format it into a message to post to discord
         """
         # if the message spans multiple lines, output it starting on a separate line from the header
@@ -61,10 +61,34 @@ class SlackParser():
         else:
             message_sep = ' '
 
-        if real_name:
-            return f"`{SlackParser.format_time(timestamp)}` **{real_name}**{message_sep}{message}"
+        if name:
+            return f"`{SlackParser.format_time(timestamp)}` **{name}**{message_sep}{message}"
         else:
             return f"`{SlackParser.format_time(timestamp)}`{message_sep}{message}"
+
+    def get_name(self, message, timestamp, filename):
+        """
+        Given a message from slack, return a name to be used in formatting a message for discord.
+        """
+        user_profile = message.get('user_profile')
+        if user_profile:
+            display_name = user_profile.get('display_name')
+            if display_name:
+                return display_name
+            real_name = user_profile.get('real_name')
+            if real_name:
+                return real_name
+
+        user = message.get('user')
+        if user:
+            if user.startswith('U'):
+                # stip leading U
+                return user[1:]
+            return user
+
+        logger.warning(f"Unable to find a user to display for message with timestamp {timestamp}"
+                       f" in file {filename}")
+        return '???'
 
     def set_channel_map(self):
         """
@@ -242,6 +266,9 @@ class SlackParser():
         See parse() above for more details.
 
         Does not return anything, channel_msgs_dict is populated in place.
+
+        For some pseudo-documentation on message format, see:
+        https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports#how-to-read-messages
         """
         logger.info(f"Parsing Slack export JSON file: {filename}")
 
@@ -250,11 +277,21 @@ class SlackParser():
 
         with open(filename) as _file:
             for message in json.load(_file):
-                if 'user_profile' in message and 'ts' in message and 'text' in message:
+                if message.get('type') == 'message':
+                    if 'ts' not in message:
+                        # According to the docs, 'ts' should always be present
+                        logger.warn("Message is missing timestamp, skipping.")
+                        continue
+
                     timestamp = float(message['ts'])
-                    real_name = message['user_profile']['real_name']
-                    message_text = message['text']
-                    full_message_text = SlackParser.format_message(timestamp, real_name, message_text)
+                    name = self.get_name(message, timestamp, filename)
+                    # According to the docs, 'text' should always be present.  And in practice,
+                    # even for no text (possible in a file attachment case, which is not yet
+                    # supported), the key should be present, with an empty string value.
+                    # Regardless, provide an empty string as a default value just in case it's not
+                    # present.
+                    message_text = message.get('text', "")
+                    full_message_text = SlackParser.format_message(timestamp, name, message_text)
 
                     if 'replies' in message:
                         # this is the head of a thread
