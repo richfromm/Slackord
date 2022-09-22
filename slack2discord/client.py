@@ -119,13 +119,13 @@ class DiscordClient(discord.Client):
                       if category.name == category_name]
         if not categories:
             # Uncategorized channels appear separately in the Discord GUI
-            logger.warn("Unable to find category with name {category_name}")
+            logger.warning(f"Unable to find category with name {category_name}")
             category = None
         else:
             if len(categories) > 1:
                 # I suspect this is not actually possible in practice
-                logger.warn("Found multiple categories with name {category_name}, will arbitrarily"
-                            " pick the first")
+                logger.warning(f"Found multiple categories with name {category_name}, will"
+                               " arbitrarily pick the first")
             category = categories[0]
 
         return category
@@ -150,8 +150,8 @@ class DiscordClient(discord.Client):
         else:
             text_channels_category = self.get_category(guild, 'Text Channels')
             if not text_channels_category:
-                logger.warn("Unable to find category for text channels, new channel will"
-                            " not be in a category")
+                logger.warning("Unable to find category for text channels, new channel will not be"
+                               " in a category")
 
             # This requires the "Manage Channels" permission
             # https://discordpy.readthedocs.io/en/latest/api.html#discord.Guild.create_text_channel
@@ -230,7 +230,8 @@ class DiscordClient(discord.Client):
                                              create=self.create_channels, dry_run=self.dry_run)
             self.channels[channel_name] = channel
 
-        logger.info(f"Successfully got all Discord channels to which we will be posting: {self.channels.keys()}")
+        logger.info("Successfully got all Discord channels to which we will be posting:"
+                    f" {self.channels.keys()}")
 
     async def post_messages(self):
         """
@@ -342,7 +343,7 @@ class DiscordClient(discord.Client):
                     retry_idx = min(retry_count - 1, len(retry_backoff) - 1)
                     retry_sec = retry_backoff[retry_idx]
 
-                logger.warn(f"{exc_msg} {desc}: {e}")
+                logger.warning(f"{exc_msg} {desc}: {e}")
                 logger.info(f"Will retry #{retry_count} after {retry_sec} seconds, press Ctrl-C to abort")
                 await asyncio.sleep(retry_sec)
 

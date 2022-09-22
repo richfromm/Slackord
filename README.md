@@ -231,10 +231,12 @@ Some items I am considering:
 * Deal with external links in Discord, showing the same preview title,
   heading, text, and image that Slack does.
 
+* Support attached files
+
 * Better error reporting, so that if an entire import is not
   successful, it is easier to resume in a way as to avoid duplicates.
 
-* Add mypy type hints.
+* Add mypy type hints
 
 * Add unit tests
 
