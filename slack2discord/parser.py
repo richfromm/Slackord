@@ -3,9 +3,10 @@ import json
 import logging
 from os import listdir
 from os.path import basename, join, isdir
-from re import match
+from re import match, sub
 
 from .message import ParsedMessage
+
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,23 @@ class SlackParser():
             return f"`{SlackParser.format_time(timestamp)}` **{name}**{message_sep}{message}"
         else:
             return f"`{SlackParser.format_time(timestamp)}`{message_sep}{message}"
+
+    @staticmethod
+    def unescape_url(url):
+        """
+        The Slack export escapes all slashes (/) in URL's with a backslash (\/). Undo this.
+
+        Return the unescaped string.
+        """
+        if url is None:
+            return None
+
+        # There's really only a single backslash in the input escape,
+        # but we need to deal with some escaping hell in specifying this,
+        # hence the triple backslash here.
+        #
+        # This will perform multiple substitutions, across multiple lines, if needed.
+        return sub('\\\/', '/', url)
 
     def get_name(self, message, timestamp, filename):
         """
@@ -307,9 +325,12 @@ class SlackParser():
         # supported), the key should be present, with an empty string value.
         # Regardless, provide an empty string as a default value just in case it's not
         # present.
-        message_text = message.get('text', "")
+        message_text = SlackParser.unescape_url(message.get('text', ""))
         full_message_text = SlackParser.format_message(timestamp, name, message_text)
         parsed_message = ParsedMessage(full_message_text)
+        if 'attachments' in message:
+            for attachment in message['attachments']:
+                parsed_message.add_link(attachment)
 
         if 'replies' in message:
             # this is the head of a thread
