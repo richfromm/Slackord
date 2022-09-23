@@ -5,6 +5,7 @@ from os import listdir
 from os.path import basename, join, isdir
 from re import match
 
+from .message import ParsedMessage
 
 logger = logging.getLogger(__name__)
 
@@ -266,9 +267,6 @@ class SlackParser():
         See parse() above for more details.
 
         Does not return anything, channel_msgs_dict is populated in place.
-
-        For some pseudo-documentation on message format, see:
-        https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports#how-to-read-messages
         """
         logger.info(f"Parsing Slack export JSON file: {filename}")
 
@@ -278,47 +276,64 @@ class SlackParser():
 
         with open(filename) as _file:
             for message in json.load(_file):
-                if message.get('type') == 'message':
-                    if 'ts' not in message:
-                        # According to the docs, 'ts' should always be present
-                        logger.warning("Message is missing timestamp, skipping.")
-                        continue
-
-                    timestamp = float(message['ts'])
-                    name = self.get_name(message, timestamp, filename)
-                    # According to the docs, 'text' should always be present.  And in practice,
-                    # even for no text (possible in a file attachment case, which is not yet
-                    # supported), the key should be present, with an empty string value.
-                    # Regardless, provide an empty string as a default value just in case it's not
-                    # present.
-                    message_text = message.get('text', "")
-                    full_message_text = SlackParser.format_message(timestamp, name, message_text)
-
-                    if 'replies' in message:
-                        # this is the head of a thread
-                        channel_msgs_dict[timestamp] = (full_message_text, dict())
-                    elif 'thread_ts' in message:
-                        # this is within a thread
-                        thread_timestamp = float(message['thread_ts'])
-                        if thread_timestamp not in channel_msgs_dict:
-                            # can't find the root of the thread to which this message belongs
-                            # ideally this shouldn't happen
-                            # but it could if you have a long enough message history not captured in the exported file
-                            logger.warning(f"Can't find thread with timestamp {thread_timestamp} for"
-                                           f" message with timestamp {timestamp}, creating"
-                                           " synthetic thread")
-                            fake_message_text = SlackParser.format_message(
-                                thread_timestamp, None, '_Unable to find start of exported thread_')
-                            channel_msgs_dict[thread_timestamp] = (fake_message_text, dict())
-
-                        # add to the dict either for the existing thread
-                        # or the fake thread that we created above
-                        channel_msgs_dict[thread_timestamp][1][timestamp] = full_message_text
-                    else:
-                        # this is not associated with a thread at all
-                        channel_msgs_dict[timestamp] = (full_message_text, None)
+                self.parse_message(message, filename, channel_msgs_dict)
 
         logger.info(f"Messages from Slack export file successfully parsed: {filename}")
+
+    def parse_message(self, message, filename, channel_msgs_dict):
+        """
+        Parse a single message that was loaded from the JSON file with the given filename.
+
+        Add the message as appropriate to the passed in dict for a particular channel.
+        See parse() above for more details.
+
+        Does not return anything, channel_msgs_dict is populated in place.
+
+        For some pseudo-documentation on message format, see:
+        https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports#how-to-read-messages
+        """
+        if message.get('type') != 'message':
+            return
+
+        if 'ts' not in message:
+            # According to the docs, 'ts' should always be present
+            logger.warning("Message is missing timestamp, skipping.")
+            return
+
+        timestamp = float(message['ts'])
+        name = self.get_name(message, timestamp, filename)
+        # According to the docs, 'text' should always be present.  And in practice,
+        # even for no text (possible in a file attachment case, which is not yet
+        # supported), the key should be present, with an empty string value.
+        # Regardless, provide an empty string as a default value just in case it's not
+        # present.
+        message_text = message.get('text', "")
+        full_message_text = SlackParser.format_message(timestamp, name, message_text)
+        parsed_message = ParsedMessage(full_message_text)
+
+        if 'replies' in message:
+            # this is the head of a thread
+            channel_msgs_dict[timestamp] = (parsed_message, dict())
+        elif 'thread_ts' in message:
+            # this is within a thread
+            thread_timestamp = float(message['thread_ts'])
+            if thread_timestamp not in channel_msgs_dict:
+                # can't find the root of the thread to which this message belongs
+                # ideally this shouldn't happen
+                # but it could if you have a long enough message history not captured in the exported file
+                logger.warning(f"Can't find thread with timestamp {thread_timestamp} for"
+                               f" message with timestamp {timestamp}, creating"
+                               " synthetic thread")
+                fake_message_text = SlackParser.format_message(
+                    thread_timestamp, None, '_Unable to find start of exported thread_')
+                channel_msgs_dict[thread_timestamp] = (parsed_message, dict())
+
+            # add to the dict either for the existing thread
+            # or the fake thread that we created above
+            channel_msgs_dict[thread_timestamp][1][timestamp] = parsed_message
+        else:
+            # this is not associated with a thread at all
+            channel_msgs_dict[timestamp] = (parsed_message, None)
 
     def output_messages(self, discord_channel, channel_msgs_dict):
         """

@@ -275,14 +275,16 @@ class DiscordClient(discord.Client):
 
         for timestamp in sorted(channel_msgs_dict.keys()):
             (message, thread) = channel_msgs_dict[timestamp]
-            sent_message = await self.send_msg_to_channel(channel, message)
+            sent_message = await self.send_msg_to_channel(
+                channel, message.get_discord_send_kwargs())
             logger.info(f"Message posted: {timestamp}")
 
             if thread:
                 created_thread = await self.create_thread(sent_message, f"thread{timestamp}")
                 for timestamp_in_thread in sorted(thread.keys()):
                     thread_message = thread[timestamp_in_thread]
-                    await self.send_msg_to_thread(created_thread, thread_message)
+                    await self.send_msg_to_thread(
+                        created_thread, thread_message.get_discord_send_kwargs())
                     logger.info(f"Message in thread posted: {timestamp_in_thread}")
 
         # XXX maybe set a boolean to indicate success to the caller,
@@ -348,7 +350,7 @@ class DiscordClient(discord.Client):
                 await asyncio.sleep(retry_sec)
 
     @discord_retry(desc="sending message to channel")
-    async def send_msg_to_channel(self, channel, msg):
+    async def send_msg_to_channel(self, channel, send_kwargs):
         """
         Send a single message to a channel
 
@@ -356,10 +358,10 @@ class DiscordClient(discord.Client):
         See discord_retry() docstring for more details.
         """
         if self.dry_run:
-            logger.info("DRY RUN: channel.send(msg)")
+            logger.info("DRY RUN: channel.send(**kwargs)")
             return
 
-        return await channel.send(msg)
+        return await channel.send(**send_kwargs)
 
     @discord_retry(desc="creating thread")
     async def create_thread(self, root_message, thread_name):
@@ -376,7 +378,7 @@ class DiscordClient(discord.Client):
         return await root_message.create_thread(name=thread_name)
 
     @discord_retry(desc="sending message to thread")
-    async def send_msg_to_thread(self, thread, msg):
+    async def send_msg_to_thread(self, thread, send_kwargs):
         """
         Send a single message to a thread
 
@@ -384,7 +386,7 @@ class DiscordClient(discord.Client):
         See discord_retry() docstring for more details.
         """
         if self.dry_run:
-            logger.info("DRY_RUN: thread.send(msg)")
+            logger.info("DRY_RUN: thread.send(**kwargs)")
             return
 
-        return await thread.send(msg)
+        return await thread.send(**send_kwargs)
