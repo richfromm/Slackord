@@ -221,15 +221,19 @@ reason about errors (and potentially restart a failed script, although no such
 restart support is currently included) if only one channel was imported at a
 time.
 
+## External docs
+
+* [Slack: How to read Slack data exports](https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports)
+* [Slack: Reference: Message payloads](https://api.slack.com/reference/messaging/payload)
+* [Slack: Formatting text for app surfaces](https://api.slack.com/reference/surfaces/formatting#basics)
+* [discord.py: API Reference](https://discordpy.readthedocs.io/en/latest/api.html)
+
 ## Future work
 
 Some items I am considering:
 
 * Minimally transform non-standard Slack Markdown as needed to conform
   to Discord Markdown.
-
-* Deal with external links in Discord, showing the same preview title,
-  heading, text, and image that Slack does.
 
 * Support attached files
 

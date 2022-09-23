@@ -2,6 +2,11 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
+### 2.3
+
+* Handle links within Slack messages
+    * These are "attachments" in Slack, and "embeds" in Discord
+
 ### 2.2
 
 * Better processing of name within Slack messages
