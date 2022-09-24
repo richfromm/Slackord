@@ -12,8 +12,8 @@
 * Canonicalize directory paths specified as command line arguments
     * This fixes a bug where certain forms of the `--src-dir` option
       value caused the inferred destination channel (if not explicitly
-      specified with the optional `--dest-channel`) to not be properly
-      set to the last directory in the path
+      specified with the optional `--dest-channel` option) to not be
+      properly set to the last directory in the path
     * A trailing slash (on Unix) caused the dest channel to be `None`
     * Ending with a relative path (e.g. `.` or `..`) would set that to
       the dest channel name
