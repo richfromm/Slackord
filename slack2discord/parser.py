@@ -127,14 +127,14 @@ class SlackParser():
         * https://www.markdownguide.org/tools/slack/
         * https://www.markdownguide.org/tools/discord/
         """
-        # The asterisk for bold needs to be escape in the regex, b/c otherwise it means "0 or more"
-        # It does *not* need to be escaped in the substitution string
+        # The asterisk for bold needs to be escaped in the regex, b/c otherwise it means "0 or
+        # more". It does *not* need to be escaped in the substitution string.
         SLACK_BOLD_RE = "(\*)(\S+|\S.*\S)(\*)"
         DISCORD_BOLD_SUB = r"\1*\2*\3"
         text_bold_fixed = sub(
             SLACK_BOLD_RE, DISCORD_BOLD_SUB, text)
 
-        # A tilde for strikethrough is not a regex special char, so needs no escaping
+        # A tilde for strikethrough is not a regex special char, so needs no escaping.
         SLACK_STRIKETHROUGH_RE = "(~)(\S+|\S.*\S)(~)"
         DISCORD_STRIKETHROUGH_SUB = r"\1~\2~\3"
         text_bold_and_strikethrough_fixed = sub(
@@ -385,8 +385,8 @@ class SlackParser():
         # present.
         message_text = SlackParser.fix_markdown(
             SlackParser.unescape_text(
-            SlackParser.unescape_url(
-            message.get('text', ""))))
+                SlackParser.unescape_url(
+                    message.get('text', ""))))
         full_message_text = SlackParser.format_message(timestamp, name, message_text)
         parsed_message = ParsedMessage(full_message_text)
         if 'attachments' in message:
