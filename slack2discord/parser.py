@@ -87,6 +87,26 @@ class SlackParser():
         return sub('\\\/', '/', url)
 
     @staticmethod
+    def unescape_text(text):
+        """
+        The slack export converts slack control characters to HTML entities. Undo this.
+
+        Return the unescaped string.
+
+        * ampersand (&) is (&amp;)
+        * less than sign (<) is (&lt;)
+        * greater than sign (>) is (&gt;)
+
+        For more details, see:
+        https://api.slack.com/reference/surfaces/formatting#escaping
+        """
+        unescaped_amp = sub('&amp;', '&', text)
+        unescaped_amp_lt = sub('&lt;', '<', unescaped_amp)
+        unescaped_amp_lt_gt = sub('&gt;', '>', unescaped_amp_lt)
+
+        return unescaped_amp_lt_gt
+
+    @staticmethod
     def fix_markdown(text):
         """
         Fix some non-standard Slack Markdown syntax
@@ -362,7 +382,10 @@ class SlackParser():
         # supported), the key should be present, with an empty string value.
         # Regardless, provide an empty string as a default value just in case it's not
         # present.
-        message_text = SlackParser.fix_markdown(SlackParser.unescape_url(message.get('text', "")))
+        message_text = SlackParser.fix_markdown(
+            SlackParser.unescape_text(
+            SlackParser.unescape_url(
+            message.get('text', ""))))
         full_message_text = SlackParser.format_message(timestamp, name, message_text)
         parsed_message = ParsedMessage(full_message_text)
         if 'attachments' in message:
