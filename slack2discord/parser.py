@@ -116,12 +116,12 @@ class SlackParser():
         This works across multiple lines.
 
         This addresses the following non-standard Slack Markdown:
-        * Slack uses *one* asterisk for bold, standard (and Discord) is **two**
+        * Slack uses *one* asterisk for bold; standard (and Discord) is **two**
 
           (One asterisk is standard Markdown for italic. Thankfully, the alternative of _one_
-          underscore works in both Slack and Discord, so there is nothing to do here.)
+          underscore works in both Slack and Discord, so there is nothing to do for this.)
 
-        * Slack uses ~one~ tilde for strikethrough, standard (and Discord) is ~~two~~
+        * Slack uses ~one~ tilde for strikethrough; standard (and Discord) is ~~two~~
 
         For more details, see:
         * https://www.markdownguide.org/tools/slack/
