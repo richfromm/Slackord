@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import logging
 from os import listdir
-from os.path import basename, join, isdir
+from os.path import basename, join, isdir, realpath
 from re import match, sub
 
 from .message import ParsedMessage
@@ -22,9 +22,11 @@ class SlackParser():
                  verbose=False):
         # These are from the config, some will be None
         self.src_file = src_file
-        self.src_dir = src_dir
+        # canonicalize path to properly infer channel name in non-obvious situations, e.g. dir ends
+        # in path separator, minimal relative paths (e.g. '.' or '..')
+        self.src_dir = realpath(src_dir) if src_dir else None
         self.dest_channel = dest_channel
-        self.src_dirtree = src_dirtree
+        self.src_dirtree = realpath(src_dirtree) if src_dirtree else None
         self.channel_file = channel_file
         self.verbose = verbose
 
@@ -85,7 +87,63 @@ class SlackParser():
         # This will perform multiple substitutions, across multiple lines, if needed.
         return sub('\\\/', '/', url)
 
+    @staticmethod
+    def unescape_text(text):
+        """
+        The slack export converts slack control characters to HTML entities. Undo this.
+
+        Return the unescaped string.
+
+        * ampersand (&) is (&amp;)
+        * less than sign (<) is (&lt;)
+        * greater than sign (>) is (&gt;)
+
+        For more details, see:
+        https://api.slack.com/reference/surfaces/formatting#escaping
+        """
+        unescaped_amp = sub('&amp;', '&', text)
+        unescaped_amp_lt = sub('&lt;', '<', unescaped_amp)
+        unescaped_amp_lt_gt = sub('&gt;', '>', unescaped_amp_lt)
+
+        return unescaped_amp_lt_gt
+
+    @staticmethod
+    def fix_markdown(text):
+        """
+        Fix some non-standard Slack Markdown syntax
+
+        Return the transformed text string.
+        This works across multiple lines.
+
+        This addresses the following non-standard Slack Markdown:
+        * Slack uses *one* asterisk for bold; standard (and Discord) is **two**
+
+          (One asterisk is standard Markdown for italic. Thankfully, the alternative of _one_
+          underscore works in both Slack and Discord, so there is nothing to do for this.)
+
+        * Slack uses ~one~ tilde for strikethrough; standard (and Discord) is ~~two~~
+
+        For more details, see:
+        * https://www.markdownguide.org/tools/slack/
+        * https://www.markdownguide.org/tools/discord/
+        """
+        # The asterisk for bold needs to be escaped in the regex, b/c otherwise it means "0 or
+        # more". It does *not* need to be escaped in the substitution string.
+        SLACK_BOLD_RE = "(\*)(\S+|\S.*\S)(\*)"
+        DISCORD_BOLD_SUB = r"\1*\2*\3"
+        text_bold_fixed = sub(
+            SLACK_BOLD_RE, DISCORD_BOLD_SUB, text)
+
+        # A tilde for strikethrough is not a regex special char, so needs no escaping.
+        SLACK_STRIKETHROUGH_RE = "(~)(\S+|\S.*\S)(~)"
+        DISCORD_STRIKETHROUGH_SUB = r"\1~\2~\3"
+        text_bold_and_strikethrough_fixed = sub(
+            SLACK_STRIKETHROUGH_RE, DISCORD_STRIKETHROUGH_SUB, text_bold_fixed)
+
+        return text_bold_and_strikethrough_fixed
+
     def get_name(self, message, timestamp, filename):
+
         """
         Given a message from slack, return a name to be used in formatting a message for discord.
         """
@@ -325,7 +383,10 @@ class SlackParser():
         # supported), the key should be present, with an empty string value.
         # Regardless, provide an empty string as a default value just in case it's not
         # present.
-        message_text = SlackParser.unescape_url(message.get('text', ""))
+        message_text = SlackParser.fix_markdown(
+            SlackParser.unescape_text(
+                SlackParser.unescape_url(
+                    message.get('text', ""))))
         full_message_text = SlackParser.format_message(timestamp, name, message_text)
         parsed_message = ParsedMessage(full_message_text)
         if 'attachments' in message:
