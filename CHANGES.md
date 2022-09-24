@@ -10,7 +10,7 @@
     * Unescape HTML entities for Slack control characters (`&`, `<`,
       and `>`)
 * Canonicalize directory paths specified as command line arguments
-    * This fixes a bug where a certain forms of the `--src-dir` option
+    * This fixes a bug where certain forms of the `--src-dir` option
       value caused the inferred destination channel (if not explicitly
       specified with the optional `--dest-channel`) to not be properly
       set to the last directory in the path
