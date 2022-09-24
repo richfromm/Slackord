@@ -225,15 +225,14 @@ time.
 
 * [Slack: How to read Slack data exports](https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports)
 * [Slack: Reference: Message payloads](https://api.slack.com/reference/messaging/payload)
-* [Slack: Formatting text for app surfaces](https://api.slack.com/reference/surfaces/formatting#basics)
+* [Slack: Formatting text for app surfaces](https://api.slack.com/reference/surfaces/formatting)
 * [discord.py: API Reference](https://discordpy.readthedocs.io/en/latest/api.html)
+* [Markdown Guide: Slack](https://www.markdownguide.org/tools/slack/)
+* [Markdown Guide: Discord](https://www.markdownguide.org/tools/discord/)
 
 ## Future work
 
 Some items I am considering:
-
-* Minimally transform non-standard Slack Markdown as needed to conform
-  to Discord Markdown.
 
 * Support attached files
 
