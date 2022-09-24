@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import logging
 from os import listdir
-from os.path import basename, join, isdir, normpath
+from os.path import basename, join, isdir, realpath
 from re import match, sub
 
 from .message import ParsedMessage
@@ -22,10 +22,11 @@ class SlackParser():
                  verbose=False):
         # These are from the config, some will be None
         self.src_file = src_file
-        # need to normalize to properly infer channel name if dir ends in path separator
-        self.src_dir = normpath(src_dir) if src_dir else None
+        # canonicalize path to properly infer channel name in non-obvious situations, e.g. dir ends
+        # in path separator, minimal relative paths (e.g. '.' or '..')
+        self.src_dir = realpath(src_dir) if src_dir else None
         self.dest_channel = dest_channel
-        self.src_dirtree = normpath(src_dirtree) if src_dirtree else None
+        self.src_dirtree = realpath(src_dirtree) if src_dirtree else None
         self.channel_file = channel_file
         self.verbose = verbose
 
