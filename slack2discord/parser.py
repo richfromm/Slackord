@@ -389,9 +389,14 @@ class SlackParser():
                     message.get('text', ""))))
         full_message_text = SlackParser.format_message(timestamp, name, message_text)
         parsed_message = ParsedMessage(full_message_text)
+
         if 'attachments' in message:
             for attachment in message['attachments']:
                 parsed_message.add_link(attachment)
+
+        if 'files' in message:
+            for file in message['files']:
+                parsed_message.add_file(file)
 
         if 'replies' in message:
             # this is the head of a thread
