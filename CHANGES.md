@@ -9,7 +9,7 @@
       attached to messages
     * Add optional `--downloads-dir DOWNLOADS_DIR` command line argument
         * Defaults to a newly created dir of the form
-          `./downloads/<timestamp>` relative to the locatoin of the script.
+          `./downloads/<timestamp>` relative to the location of the script.
 
 ### 2.4
 
