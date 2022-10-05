@@ -29,16 +29,23 @@ originates.
 
 ### virtualenv
 
-Install `discord.py` ([pypi](https://pypi.org/project/discord.py/),
-[homepage](https://github.com/Rapptz/discord.py),
-[docs](https://discordpy.readthedocs.io/en/latest/)) (_yes, there
-really is a `.py` included in the package name_) and `decorator`
-([pypi](https://pypi.org/project/decorator/),
-[homepage](https://github.com/micheles/decorator),
-[docs](https://github.com/micheles/decorator/blob/master/docs/documentation.md))
-packages into a Python virtualenv:
+Install the following packages into a Python virtualenv:
 
-    pip install discord.py decorator
+* `discord.py` ([docs](https://discordpy.readthedocs.io/en/latest/),
+[pypi](https://pypi.org/project/discord.py/),
+[source](https://github.com/Rapptz/discord.py)) (_yes, there really is
+a `.py` suffix included in the package name_)
+* `decorator`
+([docs](https://github.com/micheles/decorator/blob/master/docs/documentation.md),
+[pypi](https://pypi.org/project/decorator/),
+[source](https://github.com/micheles/decorator))
+* `requests` ([docs](https://requests.readthedocs.io/en/latest/),
+[pypi](https://pypi.org/project/requests/),
+[source](https://github.com/psf/requests))
+
+via:
+
+    pip install discord.py decorator requests
 
 For help creating virtual environments, see the
 [venv](https://docs.python.org/3/library/venv.html) docs. If you use Python a
@@ -177,7 +184,7 @@ following manners. This is the order that is searched:
 
 Briefly, the script is executed via:
 
-    ./slack2discord.py [--token TOKEN] [--server SERVER] [--create] \
+    ./slack2discord.py [--token TOKEN] [--server SERVER] [--create] [--downloads-dir DOWNLOADS_DIR] \
         [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
 The src and dest related options can be specified in one of three different
@@ -234,14 +241,18 @@ time.
 
 Some items I am considering:
 
-* Support attached files
-
 * Better error reporting, so that if an entire import is not
   successful, it is easier to resume in a way as to avoid duplicates.
 
 * Add mypy type hints
 
 * Add unit tests
+
+* Ways to optimize file downloads:
+    * Download multiple files asynchronously via using
+      [aiohttp](https://docs.aiohttp.org/en/stable/)
+    * Stream file downloads in chunks via
+      [`Response.iter_content`](https://requests.readthedocs.io/en/latest/api/#requests.Response.iter_content)
 
 Feel free to open issues in GitHub if there are any other features you
 would like to see.

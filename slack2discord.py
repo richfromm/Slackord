@@ -11,6 +11,7 @@ from discord.utils import setup_logging
 
 from slack2discord.client import DiscordClient
 from slack2discord.config import get_config
+from slack2discord.downloader import SlackDownloader
 from slack2discord.parser import SlackParser
 
 
@@ -24,6 +25,9 @@ if __name__ == '__main__':
     setup_logging(root=True)
 
     config = get_config(argv)
+    if config.verbose:
+        logger.info("Verbose output enabled, setting log level to DEBUG")
+        logger.setLevel(logging.DEBUG)
 
     # parse either a single file (one day of one Slack channel),
     # or all of the files in a dir (all days for one Slack channel)
@@ -33,14 +37,25 @@ if __name__ == '__main__':
         dest_channel=config.dest_channel,
         src_dirtree=config.src_dirtree,
         channel_file=config.channel_file,
-        verbose=config.verbose)
+        verbose=config.verbose,
+    )
     parser.parse()
+
+    downloader = SlackDownloader(
+        parsed_messages=parser.parsed_messages,
+        downloads_dir=config.downloads_dir,
+    )
+    downloader.download()
 
     # post the parsed Slack messages to Discord channel(s)
     client = DiscordClient(
-        token=config.token, parsed_messages=parser.parsed_messages,
-        server_name=config.server, create_channels=config.create,
-        verbose=config.verbose, dry_run=config.dry_run)
+        token=config.token,
+        parsed_messages=parser.parsed_messages,
+        server_name=config.server,
+        create_channels=config.create,
+        verbose=config.verbose,
+        dry_run=config.dry_run,
+    )
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt
     # b/c it is caught by the run() loop in the discord client
     client.run()
