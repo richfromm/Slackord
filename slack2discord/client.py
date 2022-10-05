@@ -156,7 +156,7 @@ class DiscordClient(discord.Client):
             # This requires the "Manage Channels" permission
             # https://discordpy.readthedocs.io/en/latest/api.html#discord.Guild.create_text_channel
             channel = await guild.create_text_channel(channel_name, category=text_channels_category)
-            assert(channel.name == channel_name, f"New channel has unexpected name: {channel.name}")
+            assert channel.name == channel_name, f"New channel has unexpected name: {channel.name}"
 
         return channel
 
@@ -271,6 +271,17 @@ class DiscordClient(discord.Client):
             await self.close()
 
     async def post_messages_to_channel(self, channel, channel_msgs_dict):
+        """
+        This posts all of the messages of the previously parsed JSON files from a Slack export
+        to a single channel.
+
+        For threaded messages, a new thread is created at the root message, and the remaining
+        messages for that thread are posted to that thread.
+
+        Links are preserved when sending the messages to Discord.
+
+        Files are added after sending the messages to Discord.
+        """
         logger.info(f"Begin posting messages to Discord channel {channel}")
 
         for timestamp in sorted(channel_msgs_dict.keys()):
@@ -278,14 +289,22 @@ class DiscordClient(discord.Client):
             sent_message = await self.send_msg_to_channel(
                 channel, message.get_discord_send_kwargs())
             logger.info(f"Message posted: {timestamp}")
+            if message.files:
+                await self.add_files_to_message(
+                    sent_message, message.get_discord_add_files_args())
+                logger.info(f"{len(message.files)} files added to message")
 
             if thread:
                 created_thread = await self.create_thread(sent_message, f"thread{timestamp}")
                 for timestamp_in_thread in sorted(thread.keys()):
                     thread_message = thread[timestamp_in_thread]
-                    await self.send_msg_to_thread(
+                    sent_thread_message = await self.send_msg_to_thread(
                         created_thread, thread_message.get_discord_send_kwargs())
                     logger.info(f"Message in thread posted: {timestamp_in_thread}")
+                    if thread_message.files:
+                        await self.add_files_to_message(
+                            sent_thread_message, thread_message.get_discord_add_files_args())
+                        logger.info(f"{len(message.files)} files added to message in thread")
 
         # XXX maybe set a boolean to indicate success to the caller,
         #     if actual return values are hard?
@@ -390,3 +409,17 @@ class DiscordClient(discord.Client):
             return
 
         return await thread.send(**send_kwargs)
+
+    @discord_retry(desc="adding files to message")
+    async def add_files_to_message(self, message, add_files_args):
+        """
+        Add files to a message by uploading as attachments
+
+        In the event of failure, will retry indefinitely until successful.
+        See discord_retry() docstring for more details.
+        """
+        if self.dry_run:
+            logger.info("DRY_RUN: message.add_files(*add_files_args)")
+            return
+
+        return await message.add_files(*add_files_args)

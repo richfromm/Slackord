@@ -23,7 +23,23 @@ class ParsedMessage():
     """
     def __init__(self, text):
         self.text = text
-        self.links = []
+        self.links: list[MessageLink] = []
+        self.files: list[MessageFile] = []
+
+    @staticmethod
+    def str_or_none(val):
+        """
+        Return a string of a value suitable for a string representation of the form:
+           key='value'
+        The point is that we **do** want the quotes if it's really a string,
+        but we do **not** want the quotes if the value is None.
+
+        Used with MessageLink and MessageFile
+        """
+        if val is None:
+            return f"{val}"
+
+        return f"'{val}'"
 
     def add_link(self, link_dict):
         """
@@ -55,8 +71,34 @@ class ParsedMessage():
 
         self.links.append(link)
 
+    def add_file(self, file_dict):
+        """
+        Add the info for a file to the parsed message
+
+        This is stored internally as self.files, which is a list of MessageFile
+
+        For more details, see:
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.Message.add_files
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.File
+        """
+        # import moved to avoid circular import
+        from .parser import SlackParser
+
+        file = MessageFile(
+            id=file_dict.get('id'),
+            name=file_dict.get('name'),
+            url=SlackParser.unescape_url(file_dict.get('url_private')),
+        )
+
+        if logger.level == logging.DEBUG:
+            logger.debug(f"File added to parsed message: {file}")
+        else:
+            logger.info(f"File added to parsed message: {file.name}")
+
+        self.files.append(file)
+
     def __repr__(self):
-        return f"ParsedMessage(text='{self.text}', links='{self.links})"
+        return f"ParsedMessage(text='{self.text}', links={self.links}, files={self.files})"
 
     def get_discord_send_kwargs(self):
         """
@@ -67,6 +109,7 @@ class ParsedMessage():
         For more details, see:
         https://discordpy.readthedocs.io/en/latest/api.html#discord.TextChannel.send
         https://discordpy.readthedocs.io/en/latest/api.html#discord.Thread.send
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.Embed
         """
         if self.links:
             if len(self.links) > MAX_DISCORD_EMBEDS:
@@ -103,6 +146,28 @@ class ParsedMessage():
             'embeds': embeds,
         }
 
+    def get_discord_add_files_args(self):
+        """
+        Return the list of MessageFile objects within a ParsedMessage object as a Discord
+        specific list of args
+
+        This can be passed via the method Messsage.add_files(*files), assuming the caller has
+        a Discord Message object
+
+        If there are no files, return None
+
+        For more details, see:
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.Message.add_files
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.File
+        """
+        if not self.files:
+            return None
+
+        return [discord.File(file.local_filename,  # this is the actual file to upload
+                             filename=file.name)   # this is what Discord should call the file
+                for file in self.files]
+
+
 class MessageLink():
     """
     Properties from an exported Slack message to support a link
@@ -129,10 +194,28 @@ class MessageLink():
         self.thumb_url = thumb_url
 
     def __repr__(self):
-        return (f"MessageLink(title='{self.title}',"
-                f" title_link='{self.title_link}',"
-                f" text='{self.text}',"
-                f" service_name='{self.service_name}',"
-                f" service_icon='{self.service_icon}',"
-                f" image_url='{self.image_url}',"
-                f" thumb_url='{self.thumb_url}')")
+        return (f"MessageLink(title='{ParsedMessage.str_or_none(self.title)}',"
+                f" title_link='{ParsedMessage.str_or_none(self.title_link)}',"
+                f" text='{ParsedMessage.str_or_none(self.text)}',"
+                f" service_name='{ParsedMessage.str_or_none(self.service_name)}',"
+                f" service_icon='{ParsedMessage.str_or_none(self.service_icon)}',"
+                f" image_url='{ParsedMessage.str_or_none(self.image_url)}',"
+                f" thumb_url='{ParsedMessage.str_or_none(self.thumb_url)}')")
+
+
+class MessageFile():
+    """
+    Properties from an exported Slack message to support an attached file
+    """
+    def __init__(self, id, name, url):
+        self.id = id      # from slack
+        self.name = name
+        self.url = url    # url_private in slack
+        # This will be set later, when the file is downloaded
+        self.local_filename = None
+
+    def __repr__(self):
+        return (f"MessageFile(id='{self.id}',"
+                f" name='{self.name}'"
+                f" url='{self.url}'"
+                f" local_filename={ParsedMessage.str_or_none(self.local_filename)})")

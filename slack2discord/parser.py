@@ -267,10 +267,10 @@ class SlackParser():
         The values are dicts, where:
         - the keys are the timestamps of the slack messages
         - the values are tuples of length 2
-          - the first item is the formatted string of a message ready to post to discord
+          - the first item is a ParsedMessage object
           - the second item is a dict if this message has a thread, otherwise None.
             - the keys are the timestamps of the messages within the thread
-            - the values are the formatted strings of the messages within the thread
+            - the values are a list of ParsedMessage objects
 
         Does not return anything, the results populate the class member self.parsed_messages
         """
@@ -389,9 +389,14 @@ class SlackParser():
                     message.get('text', ""))))
         full_message_text = SlackParser.format_message(timestamp, name, message_text)
         parsed_message = ParsedMessage(full_message_text)
+
         if 'attachments' in message:
             for attachment in message['attachments']:
                 parsed_message.add_link(attachment)
+
+        if 'files' in message:
+            for file in message['files']:
+                parsed_message.add_file(file)
 
         if 'replies' in message:
             # this is the head of a thread

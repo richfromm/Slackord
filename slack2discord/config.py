@@ -16,7 +16,7 @@ DESCRIPTION = dedent(
 
 USAGE = dedent(
     f"""
-    {argv[0]} [--token TOKEN] [--server SERVER] [--create] \\
+    {argv[0]} [--token TOKEN] [--server SERVER] [--create] [--downloads-dir DOWNLOADS_DIR] \\
         [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
     src and dest related options must follow one of the following mutually exclusive formats:
@@ -197,13 +197,28 @@ def get_config(argv):
                         help="File containing list of Slack channels to port to Discord, with"
                         " optional mapping to Discord channels if named differently.")
 
+    parser.add_argument('--downloads-dir',
+                        required=False,
+                        default=None,
+                        help="Directory in which to download any files attached to Slack messages,"
+                        " before uploading them to Discord. If not present, will default to a"
+                        " newly created dir of the form './downloads/<timestamp>', relative to the"
+                        " location of this script. Unless resuming from a previously failed script"
+                        " execution, it is highly recommended that each execution of the script"
+                        " use a unique directory.")
+
     parser.add_argument('-v', '--verbose',
                         required=False,
-                        action='store_true')
+                        action='store_true',
+                        help="Enable verbose output")
 
     parser.add_argument('-n', '--dry-run',
                         required=False,
-                        action='store_true')
+                        action='store_true',
+                        help="Don't change any state in Discord. Note that dry run is **only**"
+                        " relative to Discord. Messages are still parsed from slack, and if"
+                        " necessary the downloads dir will be created locally, and files will be"
+                        " downloaded from Slack into that dir.")
 
     config = parser.parse_args()
     get_token(config)
