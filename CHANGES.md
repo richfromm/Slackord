@@ -2,6 +2,15 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
+### 2.5 (in progress)
+
+* Add support for files attached to messages
+    * Files are downloaded from Slack then uploaded to Discord and
+      attached to messages
+    * Add optional `--downloads-dir DOWNLOADS_DIR` command line argument
+        * Defaults to a newly created dir of the form
+          `./downloads/<timestamp>` relative to the locatoin of the script.
+
 ### 2.4
 
 * Numerous formatting improvements
