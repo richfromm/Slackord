@@ -109,6 +109,7 @@ class ParsedMessage():
         For more details, see:
         https://discordpy.readthedocs.io/en/latest/api.html#discord.TextChannel.send
         https://discordpy.readthedocs.io/en/latest/api.html#discord.Thread.send
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.Embed
         """
         if self.links:
             if len(self.links) > MAX_DISCORD_EMBEDS:
@@ -145,6 +146,28 @@ class ParsedMessage():
             'embeds': embeds,
         }
 
+    def get_discord_add_files_args(self):
+        """
+        Return the list of MessageFile objects within a ParsedMessage object as a Discord
+        specific list of args
+
+        This can be passed via the method Messsage.add_files(*files), assuming the caller has
+        a Discord Message object
+
+        If there are no files, return None
+
+        For more details, see:
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.Message.add_files
+        https://discordpy.readthedocs.io/en/latest/api.html#discord.File
+        """
+        if not self.files:
+            return None
+
+        return [discord.File(file.local_filename,  # this is the actual file to upload
+                             filename=file.name)   # this is what Discord should call the file
+                for file in self.files]
+
+
 class MessageLink():
     """
     Properties from an exported Slack message to support a link
@@ -178,6 +201,7 @@ class MessageLink():
                 f" service_icon='{ParsedMessage.str_or_none(self.service_icon)}',"
                 f" image_url='{ParsedMessage.str_or_none(self.image_url)}',"
                 f" thumb_url='{ParsedMessage.str_or_none(self.thumb_url)}')")
+
 
 class MessageFile():
     """
