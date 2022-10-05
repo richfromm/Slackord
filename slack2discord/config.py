@@ -210,7 +210,7 @@ def get_config(argv):
     parser.add_argument('-v', '--verbose',
                         required=False,
                         action='store_true',
-                        help="Enable verbose outout")
+                        help="Enable verbose output")
 
     parser.add_argument('-n', '--dry-run',
                         required=False,

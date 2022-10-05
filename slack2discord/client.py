@@ -272,7 +272,7 @@ class DiscordClient(discord.Client):
 
     async def post_messages_to_channel(self, channel, channel_msgs_dict):
         """
-        This posts all of the messages of the previously parsed JSON files form a Slack export
+        This posts all of the messages of the previously parsed JSON files from a Slack export
         to a single channel.
 
         For threaded messages, a new thread is created at the root message, and the remaining
@@ -281,7 +281,6 @@ class DiscordClient(discord.Client):
         Links are preserved when sending the messages to Discord.
 
         Files are added after sending the messages to Discord.
-
         """
         logger.info(f"Begin posting messages to Discord channel {channel}")
 

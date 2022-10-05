@@ -36,9 +36,9 @@ class SlackDownloader():
                 error_msg = f"Downloads dir already exists but is **NOT** a dir: {downloads_dir}"
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
-        # hold off on creating if it doesn't exist, only create if need
-        # (if prasing includes any files)
 
+        # hold off on creating if it doesn't exist, only create if needed
+        # (if parsing includes any files)
         self.downloads_dir = downloads_dir
 
         self.files: list[MessageFile] = []
@@ -68,7 +68,7 @@ class SlackDownloader():
         # keys are channel names, values are per-channel dicts
         for channel_msgs_dict in self.parsed_messages.values():
             # keys are timestamps, values are tuples
-            # tuples containt ParsedMessage object and an optional dict
+            # tuples containt ParsedMessage object and an optional dict for a thread
             for parsed_message, thread in channel_msgs_dict.values():
                 self._add_files(parsed_message)
                 if thread:
@@ -97,6 +97,7 @@ class SlackDownloader():
 
         This is a blocking call.
         """
+        # We're basically emulating this wget command
         logger.debug(f"wget -O {filename} {url}")
         if exists(filename):
             logger.warning(f"local filename already exists, will overwrite: {filename}")
