@@ -37,6 +37,7 @@ if __name__ == '__main__':
         dest_channel=config.dest_channel,
         src_dirtree=config.src_dirtree,
         channel_file=config.channel_file,
+        users_file=config.users_file,
         verbose=config.verbose,
     )
     parser.parse()

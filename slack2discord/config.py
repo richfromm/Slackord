@@ -16,7 +16,8 @@ DESCRIPTION = dedent(
 
 USAGE = dedent(
     f"""
-    {argv[0]} [--token TOKEN] [--server SERVER] [--create] [--downloads-dir DOWNLOADS_DIR] \\
+    {argv[0]} [--token TOKEN] [--server SERVER] [--create] \\
+        [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] \\
         [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
     src and dest related options must follow one of the following mutually exclusive formats:
@@ -196,6 +197,17 @@ def get_config(argv):
                         default=None,
                         help="File containing list of Slack channels to port to Discord, with"
                         " optional mapping to Discord channels if named differently.")
+
+    parser.add_argument('--users-file',
+                        required=False,
+                        default=None,
+                        help="JSON file to obtain Slack user name information. If not present,"
+                        " will default to 'users.json' in the dir at the top level of the Slack"
+                        " export, which in turn is deduced from SRC_FILE or SRC_DIR or SRC_DIRTREE"
+                        " as applicable. If not specified and unable to deduce, or not found,"
+                        " Slack user name information will be fetched from individual messages."
+                        " This generally is fine. (So far, messages with attached files are the"
+                        " only known case in which this alternate method fails.")
 
     parser.add_argument('--downloads-dir',
                         required=False,

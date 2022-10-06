@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import logging
 from os import listdir
-from os.path import basename, join, isdir, realpath
+from os.path import basename, dirname, exists, join, isdir, realpath
 from re import match, sub
 
 from .message import ParsedMessage
@@ -17,9 +17,13 @@ class SlackParser():
     to interpret the content of messages to post to Discord
     """
     def __init__(self,
-                 src_file=None, src_dir=None, dest_channel=None,
-                 src_dirtree=None, channel_file=None,
-                 verbose=False):
+                 src_file: str = None,
+                 src_dir: str = None,
+                 dest_channel: str = None,
+                 src_dirtree: str = None,
+                 channel_file: str = None,
+                 users_file: str = None,
+                 verbose: bool = False) -> None:
         # These are from the config, some will be None
         self.src_file = src_file
         # canonicalize path to properly infer channel name in non-obvious situations, e.g. dir ends
@@ -28,13 +32,38 @@ class SlackParser():
         self.dest_channel = dest_channel
         self.src_dirtree = realpath(src_dirtree) if src_dirtree else None
         self.channel_file = channel_file
+
+        if not users_file:
+            if self.src_dirtree:
+                users_file = join(self.src_dirtree, 'users.json')
+            elif self.src_dir:
+                users_file = join(self.src_dir, '..', 'users.json')
+            elif self.src_file:
+                users_file = join(dirname(self.src_file), '..', 'users.json')
+            else:
+                # I don't think this should be able to happen
+                logger.warn("users file is not specified, and unable to figure it out")
+
+        if users_file:
+            if not exists(users_file):
+                logger.warn(f"users file is not specified, unable to find a users file at our guess: {users_file}")
+                users_file = None
+
+        if users_file:
+            users_file = realpath(users_file)
+            logger.info(f"users file found and set to: {users_file}")
+
+        self.users_file = users_file
+        # See parse_users() for details
+        self.users: dict[str, str] = dict()
+
         self.verbose = verbose
 
         # See set_channel_map() for details
-        self.channel_map = dict()
+        self.channel_map: dict[str, str] = dict()
 
         # See parse() for details
-        self.parsed_messages = dict()
+        self.parsed_messages: dict[str, dict[float, tuple[ParsedMessage, dict[float, list[ParsedMessage]]]]] = dict()
 
     @staticmethod
     def is_slack_export_filename(filename):
@@ -142,11 +171,62 @@ class SlackParser():
 
         return text_bold_and_strikethrough_fixed
 
-    def get_name(self, message, timestamp, filename):
+    def parse_users(self) -> None:
+        """
+        Parse a users.json file from a Slack export, and populate a dict with its contents.
 
+        The dict matches Slack user ID's to names.
+
+        Does not return anything, the results populate the class member self.users
+        """
+        if not self.users_file:
+            logger.warn("No users file specified or deduced, will get user info from individual messages")
+            return
+
+        logger.info(f"Parsing user information from {self.users_file}")
+        with open(self.users_file) as _file:
+            for user in json.load(_file):
+                if 'id' not in user:
+                    # I don't think this ought to happen
+                    logger.warn("User in Slack users file is missing ID, will ignore")
+                    continue
+
+                user_id = user['id']
+                if user_id in self.users:
+                    # I don't think this ought to happen
+                    logger.warn(f"Duplicate Slack user ID found, will ignore repeated instances: {user_id}")
+                    continue
+
+                if 'name' in user:
+                    # this appears to be the same as user['profile']['display_name']
+                    user_name = user['name']
+                elif 'real_name' in user:
+                    # this appears to be the same as user['profile']['real_name']
+                    user_name = user['real_name']
+                else:
+                    logger.warn(f"Unable to find name for user ID: {user_id}")
+                    continue
+
+                logger.debug(f"Setting name for user ID {user_id} to {user_name}")
+                self.users[user_id] = user_name
+
+        if self.verbose:
+            logger.debug(f"{len(self.users)} users successfully parsed: {self.users}")
+        else:
+            logger.info(f"{len(self.users)} users successfully parsed")
+
+    def get_name(self, message: dict, timestamp: float, filename: str) -> str:
         """
         Given a message from slack, return a name to be used in formatting a message for discord.
+
+        If possible, we use the dict self.users that maps Slack user ID's to names (previously
+        parsed from users.json, see parse_users()) to get the user name.  We fall back to info
+        within the message if that is not successful.
         """
+        user_id = message.get('user')
+        if user_id in self.users:
+            return self.users[user_id]
+
         user_profile = message.get('user_profile')
         if user_profile:
             display_name = user_profile.get('display_name')
@@ -156,12 +236,11 @@ class SlackParser():
             if real_name:
                 return real_name
 
-        user = message.get('user')
-        if user:
-            if user.startswith('U'):
+        if user_id:
+            if user_id.startswith('U'):
                 # stip leading U
-                return user[1:]
-            return user
+                return user_id[1:]
+            return user_id
 
         logger.warning(f"Unable to find a user to display for message with timestamp {timestamp}"
                        f" in file {filename}")
@@ -254,7 +333,7 @@ class SlackParser():
 
         logger.info(f"Mapping of Slack to Discord channel(s): {self.channel_map}")
 
-    def parse(self):
+    def parse(self) -> None:
         """
         Parse a Slack export, and populate a dict with its contents.
 
@@ -274,6 +353,8 @@ class SlackParser():
 
         Does not return anything, the results populate the class member self.parsed_messages
         """
+        self.parse_users()
+
         self.set_channel_map()
         for slack_channel, discord_channel in self.channel_map.items():
             self.parse_channel(slack_channel, discord_channel)
