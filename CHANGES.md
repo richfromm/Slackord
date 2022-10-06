@@ -2,6 +2,10 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
+### 2.7 (in progress)
+
+* Add mypy typing hints
+
 ### 2.6
 
 * During parsing, skip any attached files that have been deleted

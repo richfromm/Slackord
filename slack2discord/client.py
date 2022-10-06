@@ -329,10 +329,21 @@ class DiscordClient(discord.Client):
         Use this by wrapping a Discord API function that you wish to call, and decorating that
         function with an optional description. For example:
 
-            @discord_retry(desc="description of call")
+            @discord_retry(desc="description of call")  # type: ignore[call-arg]
             async def wrapper_func(self, discord_obj, arg1, arg2):
                 await discord_obj.discord_func(arg1, arg2)
 
+        The comment at the end of the decorator line is to suppress errors like the following
+        when running the mypy static type checker:
+
+            slack2discord/client.py:371: error: Unexpected keyword argument "desc" for "discord_retry" of "DiscordClient"
+
+        mypy is confused by our use of parametrized decorator via the decorator module (see
+        https://github.com/micheles/decorator/blob/master/docs/documentation.md#decorator-factories),
+        which allows us to annotate this function with just `@decorator` and then use it below via
+        @discord_retry(desc="foo"). I'm too lazy to try to figure out exactly what's going wrong
+        and how to truly fix it, so for now I am just suppressing the error. Suggestions for actual
+        fixes are welcome.
         """
         # seconds to wait on subsequent retries
         # not used in the rate limiting case, where the retry is explicitly provided
@@ -368,7 +379,7 @@ class DiscordClient(discord.Client):
                 logger.info(f"Will retry #{retry_count} after {retry_sec} seconds, press Ctrl-C to abort")
                 await asyncio.sleep(retry_sec)
 
-    @discord_retry(desc="sending message to channel")
+    @discord_retry(desc="sending message to channel")  # type: ignore[call-arg]
     async def send_msg_to_channel(self, channel, send_kwargs):
         """
         Send a single message to a channel
@@ -382,7 +393,7 @@ class DiscordClient(discord.Client):
 
         return await channel.send(**send_kwargs)
 
-    @discord_retry(desc="creating thread")
+    @discord_retry(desc="creating thread")  # type: ignore[call-arg]
     async def create_thread(self, root_message, thread_name):
         """
         Create a thread rooted at the given message, with the given name.
@@ -396,7 +407,7 @@ class DiscordClient(discord.Client):
 
         return await root_message.create_thread(name=thread_name)
 
-    @discord_retry(desc="sending message to thread")
+    @discord_retry(desc="sending message to thread")  # type: ignore[call-arg]
     async def send_msg_to_thread(self, thread, send_kwargs):
         """
         Send a single message to a thread
@@ -410,7 +421,7 @@ class DiscordClient(discord.Client):
 
         return await thread.send(**send_kwargs)
 
-    @discord_retry(desc="adding files to message")
+    @discord_retry(desc="adding files to message")  # type: ignore[call-arg]
     async def add_files_to_message(self, message, add_files_args):
         """
         Add files to a message by uploading as attachments
