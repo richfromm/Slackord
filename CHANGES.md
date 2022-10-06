@@ -2,7 +2,7 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
-### 2.5 (in progress)
+### 2.5
 
 * Add support for files attached to messages
     * Files are downloaded from Slack then uploaded to Discord and
@@ -10,6 +10,14 @@
     * Add optional `--downloads-dir DOWNLOADS_DIR` command line argument
         * Defaults to a newly created dir of the form
           `./downloads/<timestamp>` relative to the location of the script.
+* Get primary user information from `users.json` file, if possible
+    * Previously, user information was retrieved from within each
+      message. Now that is a fallback.
+    * The problem was that messages with attached files do not have
+      this information.
+    * File is at the top level of the Slack export. Default is to
+      deduce location based on other existing parameters. Can also set
+      with optional `--users-file USERS_FILE` command line argument.
 
 ### 2.4
 
