@@ -477,7 +477,8 @@ class SlackParser():
 
         if 'files' in message:
             for file in message['files']:
-                parsed_message.add_file(file)
+                if file['mode'] != 'tombstone':
+                    parsed_message.add_file(file)
 
         if 'replies' in message:
             # this is the head of a thread
