@@ -4,6 +4,7 @@ from os.path import dirname, exists, isdir, join, realpath
 from time import time
 
 from requests import get
+from requests.exceptions import HTTPError
 
 from .message import ParsedMessage, MessageFile
 
@@ -103,9 +104,18 @@ class SlackDownloader():
             logger.warning(f"local filename already exists, will overwrite: {filename}")
 
         with get(url) as req:
-            req.raise_for_status()
+
+            try:
+                req.raise_for_status()
+                content = req.content
+            except HTTPError as e:
+                default_image = join(dirname(__file__), '..', '404.jpg')
+                with open(default_image, "rb") as default_image_file:
+                    content = default_image_file.read()
+
             with open(filename, 'wb') as file:
-                file.write(req.content)
+                file.write(content)
+
 
     def download(self) -> None:
         """
