@@ -3,7 +3,7 @@ from os import makedirs
 from os.path import dirname, exists, isdir, join, realpath
 from time import time
 
-from requests import get
+from requests import codes, get
 
 from .message import ParsedMessage, MessageFile
 
@@ -15,10 +15,14 @@ class SlackDownloader():
     """
     Download a list of previously parsed files attached to Slack messages.
     Once the files exist locally, they can then be uploaded to corresponding Discord messages.
+
+    Files not found by default raise an error.
+    This behavior can be overridden and they can be ignored with ignore_not_found.
     """
     def __init__(self,
                  parsed_messages: dict,
-                 downloads_dir: str = None):
+                 downloads_dir: str = None,
+                 ignore_not_found: bool = False):
         # see SlackParser.parse() for details
         self.parsed_messages = parsed_messages
 
@@ -40,6 +44,10 @@ class SlackDownloader():
         # hold off on creating if it doesn't exist, only create if needed
         # (if parsing includes any files)
         self.downloads_dir = downloads_dir
+
+        # XXX FOR TESTING ONLY !!!
+        self.ignore_not_found = True
+        # self.ignore_not_found = ignore_not_found
 
         self.files: list[MessageFile] = []
 
@@ -77,12 +85,13 @@ class SlackDownloader():
                     for thread_message in thread.values():
                         self._add_files(thread_message)
 
-    def _wget(self, url, filename) -> None:
+    def _wget(self, url, filename, ignore_not_found = False) -> None:
         """
         Fetch a file via HTTP GET from the given URL, and store it in the local filename.
 
-        Nothing is returned on success.
-        HTTP errors are raised as Exception's
+        Return True if we successfully downloaded the file
+        HTTP errors are in general raised as Exception's
+        If ignore_not_found is set, a not found error is allowed, and returns False
 
         This is a simple implementation. We could instead stream data in chunks using
         Response.iter_content:
@@ -103,9 +112,21 @@ class SlackDownloader():
             logger.warning(f"local filename already exists, will overwrite: {filename}")
 
         with get(url) as req:
+            # Special case 404 errors, allowing user to ignore.
+            # All other HTTP errors raise an exception and fail.
+            if req.status_code == codes.not_found:
+                if ignore_not_found:
+                    logger.warning(f"Not found error returned fetching {url} to {filename}, ignoring.")
+                    return False
+                logger.error(f"Not found error returned fetching {url} to {filename}."
+                             " You can ignore all of these with --ignore-file-not-found")
+                # intentional fall through, since we **do** want to raise the error next
+
             req.raise_for_status()
             with open(filename, 'wb') as file:
                 file.write(req.content)
+
+        return True
 
     def download(self) -> None:
         """
@@ -126,11 +147,21 @@ class SlackDownloader():
         if not exists(self.downloads_dir):
             makedirs(self.downloads_dir)
 
+        success = 0
+        not_found = 0
         for file in self.files:
             # using file.name would be more descriptive
             # but that risks filename collisions
             # we could place each file in its own dir, e.g. self.downloads_dir/file.id/file.name
             # but that would be more awkward to work with
             file.local_filename = join(self.downloads_dir, file.id)
-            self._wget(file.url, file.local_filename)
-        logger.info(f"Successfully downloaded {len(self.files)} files to {self.downloads_dir}")
+            if self._wget(file.url, file.local_filename, self.ignore_not_found):
+                success += 1
+            else:
+                file.not_found = True
+                not_found += 1
+
+        assert success + not_found == len(self.files)
+        logger.info(f"Successfully downloaded {success} files to {self.downloads_dir}")
+        if not_found > 0:
+            logger.warning(f"Ignored {not_found} files not found")

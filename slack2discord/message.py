@@ -154,6 +154,8 @@ class ParsedMessage():
         This can be passed via the method Messsage.add_files(*files), assuming the caller has
         a Discord Message object
 
+        Any files which were not found and previously ignored are excluded
+
         If there are no files, return None
 
         For more details, see:
@@ -165,7 +167,8 @@ class ParsedMessage():
 
         return [discord.File(file.local_filename,  # this is the actual file to upload
                              filename=file.name)   # this is what Discord should call the file
-                for file in self.files]
+                for file in self.files
+                if not file.not_found]             # exclude files not found
 
 
 class MessageLink():
@@ -211,11 +214,15 @@ class MessageFile():
         self.id = id      # from slack
         self.name = name
         self.url = url    # url_private in slack
-        # This will be set later, when the file is downloaded
+        # This will be set later, when the file is downloaded (successfully or not)
         self.local_filename = None
+        # This is set in the special case of the file not found,
+        # which the user can optionally ignore.
+        self.not_found = False
 
     def __repr__(self):
         return (f"MessageFile(id='{self.id}',"
-                f" name='{self.name}'"
-                f" url='{self.url}'"
-                f" local_filename={ParsedMessage.str_or_none(self.local_filename)})")
+                f" name='{self.name}',"
+                f" url='{self.url}',"
+                f" local_filename={ParsedMessage.str_or_none(self.local_filename)}),"
+                f" not_found={self.not_found})")
