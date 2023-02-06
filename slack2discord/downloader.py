@@ -45,9 +45,7 @@ class SlackDownloader():
         # (if parsing includes any files)
         self.downloads_dir = downloads_dir
 
-        # XXX FOR TESTING ONLY !!!
-        self.ignore_not_found = True
-        # self.ignore_not_found = ignore_not_found
+        self.ignore_not_found = ignore_not_found
 
         self.files: list[MessageFile] = []
 

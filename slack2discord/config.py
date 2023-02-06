@@ -17,7 +17,7 @@ DESCRIPTION = dedent(
 USAGE = dedent(
     f"""
     {argv[0]} [--token TOKEN] [--server SERVER] [--create] \\
-        [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] \\
+        [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] [--ignore-file-not-found] \\
         [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
     src and dest related options must follow one of the following mutually exclusive formats:
@@ -218,6 +218,17 @@ def get_config(argv):
                         " location of this script. Unless resuming from a previously failed script"
                         " execution, it is highly recommended that each execution of the script"
                         " use a unique directory.")
+
+    parser.add_argument('--ignore-file-not-found',
+                        required=False,
+                        action='store_true',
+                        help="Ignore HTTP Not Found errors when downloading attached files. The"
+                        " default behavior is to fail by raising an HTTPError on any HTTP errors"
+                        " related to downloading file attachments from Slack. Use this option to"
+                        " ignore errors of files not found, and log as warnings. This state can"
+                        " occur if a user deletes a file from Slack after performing the export."
+                        " Note that files deleted before the export are automatically logged as"
+                        " warnings and ignored, regardless of this option.")
 
     parser.add_argument('-v', '--verbose',
                         required=False,
