@@ -477,7 +477,16 @@ class SlackParser():
 
         if 'files' in message:
             for file in message['files']:
-                if file['mode'] != 'tombstone':
+                if file.get('mode') == 'tombstone':
+                    # File was deleted from Slack, just log this,
+                    # don't bother mentioning this state in the Discord import.
+                    if 'date_deleted' in file:
+                        logger.warning("Attached file was deleted at"
+                                       f" {SlackParser.format_time(file['date_deleted'])}. Ignoring.")
+                    else:
+                        logger.warning(f"Attached file was deleted. Ignoring.")
+                else:
+                    # Normal attached file case
                     parsed_message.add_file(file)
 
         if 'replies' in message:
