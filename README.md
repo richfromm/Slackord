@@ -184,7 +184,8 @@ following manners. This is the order that is searched:
 
 Briefly, the script is executed via:
 
-    ./slack2discord.py [--token TOKEN] [--server SERVER] [--create] [--downloads-dir DOWNLOADS_DIR] \
+    ./slack2discord.py [--token TOKEN] [--server SERVER] [--create] \
+        [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] [--ignore-file-not-found] \
         [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
 The src and dest related options can be specified in one of three different
@@ -210,6 +211,41 @@ For more details, and complete descriptions of all command line
 options, execute:
 
     ./slack2discord.py --help
+
+## File attachments
+
+As noted at the end of [Slack: How to read Slack data exports], files uploaded
+to Slack are not directly part of a Slack export. Instead, the export contains
+URLs that point to the locations of the files on Slack servers. These URLs
+include a token that gives you the ability access those files. These tokens
+are listed along with the exports on your Slack workspace's export page, which
+can be found at `https://<workspace-name>.slack.com/services/export`
+
+When running the script, such files will first be downloaded from Slack to a
+local dir (which can be controlled with the `--downloads-dir` option), and
+then uploaded to Discord. There are a number of reasons why this operation
+could fail, and the files listed in the Slack export might not be found. These
+include:
+
+* The file was deleted from Slack after the export was performed
+
+* The download token associated with that file export was revoked (this can be
+  done via the export page for the Slack workspace)
+
+In these cases (and for any other HTTP errors related to downloading file
+attachments from Slack), the default behavior is for the script to fail by
+raising an HTTPError. This allows you to investigate the situation before
+deciding how to proceed.
+
+For the special case of HTTP Not Found errors, you can override this behavior,
+and simply log the not found file as a warning, with the command line option
+`--ignore-file-not-found`.
+
+Note that if any files are deleted before the export is created, this state
+will be reflected within the export (the file will have its `mode` set to
+`tombstone`). Any such files will always be logged as warnings and ignored,
+regardless of whether or not the ignore option is set for the HTTP Not found
+case.
 
 ## Internals
 

@@ -45,6 +45,7 @@ if __name__ == '__main__':
     downloader = SlackDownloader(
         parsed_messages=parser.parsed_messages,
         downloads_dir=config.downloads_dir,
+        ignore_not_found=config.ignore_file_not_found,
     )
     downloader.download()
 
