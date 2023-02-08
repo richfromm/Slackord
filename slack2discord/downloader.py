@@ -5,6 +5,7 @@ from time import time
 from typing import Optional
 
 from requests import codes, get, head
+from tqdm import tqdm
 
 from .message import ParsedMessage, MessageFile
 
@@ -36,7 +37,7 @@ class SlackDownloader():
         logger.info(f"Downloaded files from Slack (if any) will be placed in {downloads_dir}")
         if exists(downloads_dir):
             if isdir(downloads_dir):
-                logger.warn(f"Downloads dir already exists: {downloads_dir}")
+                logger.info(f"Downloads dir already exists: {downloads_dir}")
             else:
                 error_msg = f"Downloads dir already exists but is **NOT** a dir: {downloads_dir}"
                 logger.error(error_msg)
@@ -169,7 +170,7 @@ class SlackDownloader():
         success = 0
         not_found = 0
         skipped = 0
-        for file in self.files:
+        for file in tqdm(self.files):
             # using file.name would be more descriptive
             # but that risks filename collisions
             # we could place each file in its own dir, e.g. self.downloads_dir/file.id/file.name
@@ -181,8 +182,8 @@ class SlackDownloader():
                 local_size = getsize(file.local_filename)
                 remote_size = self._getsize_remote(file.url)
                 if remote_size and (local_size == remote_size):
-                   logger.info(f"Skipping URL {file.url} which is covered by already existing"
-                               f" {local_size} byte local file {file.local_filename}")
+                   logger.debug(f"Skipping URL {file.url} which is covered by already existing"
+                                f" {local_size} byte local file {file.local_filename}")
                    skipped += 1
                    continue
 
