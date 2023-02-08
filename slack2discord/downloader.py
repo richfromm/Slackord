@@ -104,7 +104,7 @@ class SlackDownloader():
 
             return int(size)
 
-    def _wget(self, url, filename, ignore_not_found = False) -> None:
+    def _wget(self, url, filename, ignore_not_found = False) -> bool:
         """
         Fetch a file via HTTP GET from the given URL, and store it in the local filename.
 
@@ -130,10 +130,10 @@ class SlackDownloader():
         if exists(filename):
             logger.warning(f"local filename already exists, will overwrite: {filename}")
 
-        with get(url) as req:
+        with get(url) as resp:
             # Special case 404 errors, allowing user to ignore.
             # All other HTTP errors raise an exception and fail.
-            if req.status_code == codes.not_found:
+            if resp.status_code == codes.not_found:
                 if ignore_not_found:
                     logger.warning(f"Not found error returned fetching {url} to {filename}, ignoring.")
                     return False
@@ -141,9 +141,9 @@ class SlackDownloader():
                              " You can ignore all of these with --ignore-file-not-found")
                 # intentional fall through, since we **do** want to raise the error next
 
-            req.raise_for_status()
+            resp.raise_for_status()
             with open(filename, 'wb') as file:
-                file.write(req.content)
+                file.write(resp.content)
 
         return True
 
