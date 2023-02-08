@@ -139,7 +139,9 @@ class SlackDownloader():
                     logger.warning(f"Not found error returned fetching {url} to {filename}, ignoring.")
                     return False
                 logger.error(f"Not found error returned fetching {url} to {filename}."
-                             " You can ignore all of these with --ignore-file-not-found")
+                             ' You can ignore all of these with "--ignore-file-not-found".')
+                logger.info("If you wish to resume and re-use existing successfully downloaded"
+                            f' files, you can also specify "--downloads-dir {self.downloads_dir}"')
                 # intentional fall through, since we **do** want to raise the error next
 
             resp.raise_for_status()
