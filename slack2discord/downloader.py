@@ -22,11 +22,19 @@ class SlackDownloader():
     This behavior can be overridden and they can be ignored with ignore_not_found.
     """
     def __init__(self,
-                 parsed_messages: dict,
+                 parsed_messages: dict[str,
+                                       dict[float,
+                                            tuple[ParsedMessage,
+                                                  Optional[dict[float,
+                                                                ParsedMessage]]]]],
                  downloads_dir: str = None,
-                 ignore_not_found: bool = False):
+                 ignore_not_found: bool = False) -> None:
         # see SlackParser.parse() for details
-        self.parsed_messages = parsed_messages
+        self.parsed_messages: dict[str,
+                                   dict[float,
+                                        tuple[ParsedMessage,
+                                              Optional[dict[float,
+                                                            ParsedMessage]]]]] = parsed_messages
 
         if downloads_dir is None:
             # second level accuracy is probably sufficient
@@ -45,9 +53,9 @@ class SlackDownloader():
 
         # hold off on creating if it doesn't exist, only create if needed
         # (if parsing includes any files)
-        self.downloads_dir = downloads_dir
+        self.downloads_dir: str = downloads_dir
 
-        self.ignore_not_found = ignore_not_found
+        self.ignore_not_found: bool = ignore_not_found
 
         self.files: list[MessageFile] = []
 
@@ -85,7 +93,7 @@ class SlackDownloader():
                     for thread_message in thread.values():
                         self._add_files(thread_message)
 
-    def _getsize_remote(self, url) -> Optional[int]:
+    def _getsize_remote(self, url: str) -> Optional[int]:
         """
         Return the size of a remote file (assuming that's what's located at the specified HTTP
         URL), in bytes, via the Content-Length HTTP header.  If we are unable to do so, for
@@ -105,7 +113,10 @@ class SlackDownloader():
 
             return int(size)
 
-    def _wget(self, url, filename, ignore_not_found = False) -> bool:
+    def _wget(self,
+              url: str,
+              filename: str,
+              ignore_not_found: bool = False) -> bool:
         """
         Fetch a file via HTTP GET from the given URL, and store it in the local filename.
 

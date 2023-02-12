@@ -1,5 +1,5 @@
 import logging
-from typing import cast, Optional
+from typing import cast, Optional, Union
 
 import discord
 
@@ -101,7 +101,7 @@ class ParsedMessage():
     def __repr__(self) -> str:
         return f"ParsedMessage(text='{self.text}', links={self.links}, files={self.files})"
 
-    def get_discord_send_kwargs(self):
+    def get_discord_send_kwargs(self) -> dict[str, Union[str, Optional[list[discord.Embed]]]]:
         """
         Return the details of the ParsedMessage object as a Discord specific dict of kwargs
 

@@ -3,8 +3,11 @@ from decorator import decorator
 import logging
 from pprint import pprint
 from traceback import print_exc
+from typing import Callable, Optional, Union, Sequence
 
 import discord
+
+from .message import ParsedMessage
 
 
 logger = logging.getLogger(__name__)
@@ -16,24 +19,37 @@ class DiscordClient(discord.Client):
     A Discord client for the purposes of importing the content of messages exported from Slack
     *Not* intended to be generic
     """
-    def __init__(self, token, parsed_messages,
-                 server_name=None, create_channels=False,
-                 verbose=False, dry_run=False,
-                 **kwargs):
-        self.token = token
+    def __init__(
+            self,
+            token: str,
+            parsed_messages: dict[str,
+                                  dict[float,
+                                       tuple[ParsedMessage,
+                                             Optional[dict[float,
+                                                           ParsedMessage]]]]],
+            server_name: Optional[str] = None,
+            create_channels: bool = False,
+            verbose: bool = False,
+            dry_run: bool = False,
+            **kwargs) -> None:
+        self.token: str = token
 
         # see SlackParser.parse() for details
-        self.parsed_messages = parsed_messages
+        self.parsed_messages: dict[str,
+                                   dict[float,
+                                        tuple[ParsedMessage,
+                                              Optional[dict[float,
+                                                            ParsedMessage]]]]] = parsed_messages
         # name if Discord server. internally referred to as "guild".
         # optional, not needed if this client is only a member of one guild.
-        self.server_name = server_name
+        self.server_name: Optional[str] = server_name
         # create Discord channels if not present. if not set, then fail in this case.
-        self.create_channels = create_channels
+        self.create_channels: bool = create_channels
         # a mapping of discord channel names to channel objects
-        self.channels = dict()
+        self.channels: dict[str, Optional[discord.TextChannel]] = dict()
 
-        self.verbose = verbose
-        self.dry_run = dry_run
+        self.verbose: bool = verbose
+        self.dry_run: bool = dry_run
 
         if 'intents' not in kwargs:
             kwargs['intents'] = discord.Intents(
@@ -65,7 +81,8 @@ class DiscordClient(discord.Client):
         """
         super().run(self.token)
 
-    def get_guild(self, guild_name=None):
+    # Different signature from superclass get_guild(id: int) and therefore different name to not collide
+    def get_guild_maybe_by_name(self, guild_name: Optional[str] = None) -> discord.Guild:
         """
         Get the appropriate guild (aka server).
 
@@ -78,7 +95,8 @@ class DiscordClient(discord.Client):
         Otherwise, raise a RuntimeError.
         """
         # use self.guilds rather than self.fetch_guilds() to avoid an unnecessary API call
-        if self.server_name:
+        guilds: Sequence[discord.Guild]
+        if guild_name:
             guilds = [guild
                       for guild in self.guilds
                       if guild.name == guild_name]
@@ -103,7 +121,10 @@ class DiscordClient(discord.Client):
 
         return guild
 
-    def get_category(self, guild, category_name):
+    def get_category(
+            self,
+            guild: discord.Guild,
+            category_name: str) -> Optional[discord.CategoryChannel]:
         """
         Get the category with the specified name.
 
@@ -130,7 +151,11 @@ class DiscordClient(discord.Client):
 
         return category
 
-    async def create_text_channel(self, guild, channel_name, dry_run=False):
+    async def create_text_channel(
+            self,
+            guild: discord.Guild,
+            channel_name: str,
+            dry_run: bool = False) -> Optional[discord.TextChannel]:
         """
         Create a new text channel with the specified name.
 
@@ -160,8 +185,13 @@ class DiscordClient(discord.Client):
 
         return channel
 
-    async def get_channel(self, guild, channel_name,
-                          create=False, dry_run=False):
+    # Different signature from superclass get_channel(id: int) and therefore different name to not collide
+    async def get_channel_by_name(
+            self,
+            guild: discord.Guild,
+            channel_name: str,
+            create: bool = False,
+            dry_run: bool = False) -> Optional[discord.TextChannel]:
         """
         Get the channel with the specified name.
 
@@ -187,7 +217,8 @@ class DiscordClient(discord.Client):
 
         elif len(channels) > 1:
             # I suspect this may not actually be possible in practice
-            error_msg = f"Found multiple Discord channels with the same name {channel}: id {channel_ids}"
+            error_msg = f"Found multiple Discord channels with the same name {channel}:" \
+                + f" id {[channel.id for channel in channels]}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 
@@ -204,7 +235,7 @@ class DiscordClient(discord.Client):
 
         return channel
 
-    async def set_channels(self):
+    async def set_channels(self) -> None:
         """
         Check that all of the Discord channels to which we want to post exist.
 
@@ -218,7 +249,7 @@ class DiscordClient(discord.Client):
         logger.info("Checking that all Discord channels to which we want to post exist:"
                     f" {channel_names_from_export}")
 
-        guild = self.get_guild(self.server_name)
+        guild = self.get_guild_maybe_by_name(self.server_name)
 
         # limit search to text channels, b/c the import doesn't support voice
         # use guild.text_channels rather than self.get_all_channels() to avoid an unnecessary API call
@@ -226,14 +257,15 @@ class DiscordClient(discord.Client):
                     f" {[channel.name for channel in guild.text_channels]}")
 
         for channel_name in channel_names_from_export:
-            channel = await self.get_channel(guild, channel_name,
-                                             create=self.create_channels, dry_run=self.dry_run)
+            channel = await self.get_channel_by_name(
+                guild, channel_name,
+                create=self.create_channels, dry_run=self.dry_run)
             self.channels[channel_name] = channel
 
         logger.info("Successfully got all Discord channels to which we will be posting:"
                     f" {self.channels.keys()}")
 
-    async def post_messages(self):
+    async def post_messages(self) -> None:
         """
         Iterate through the results of previously parsed JSON files from a Slack export, and post
         each message to Discord in the appropriate channel. Threading is preserved.
@@ -270,7 +302,13 @@ class DiscordClient(discord.Client):
         finally:
             await self.close()
 
-    async def post_messages_to_channel(self, channel, channel_msgs_dict):
+    async def post_messages_to_channel(
+            self,
+            channel: Optional[discord.TextChannel],
+            channel_msgs_dict: dict[float,
+                                    tuple[ParsedMessage,
+                                          Optional[dict[float,
+                                                        ParsedMessage]]]]) -> None:
         """
         This posts all of the messages of the previously parsed JSON files from a Slack export
         to a single channel.
@@ -310,8 +348,16 @@ class DiscordClient(discord.Client):
         #     if actual return values are hard?
         logger.info(f"Done posting messages to Discord channel {channel}")
 
+    # mypy is confused and thinks there should be a self parameter in the decorator declaration
+    #    slack2discord/client.py:352: error: Self argument missing for a non-static method (or an invalid type for self)
+    # not sure if this is a mypy bug, there is this issue, although it claims to be fixed:
+    #    https://github.com/python/mypy/issues/7778 : decorator as class member raises "self-argument missing"
     @decorator
-    async def discord_retry(coro, desc="making discord HTTP API call", *args, **kwargs):
+    async def discord_retry(  # type: ignore[misc]
+            coro: Callable,
+            desc: str = "making discord HTTP API call",
+            *args,
+            **kwargs) -> None:
         """
         Wrapper around a Discord API call, with retry
 
@@ -366,7 +412,7 @@ class DiscordClient(discord.Client):
                     # doing automatic rate limiting.
                     # For more details, see https://discord.com/developers/docs/topics/rate-limits
                     exc_msg = "We have been rate limited"
-                    retry_sec = r1.retry_after
+                    retry_sec = e.retry_after
                 else:
                     if isinstance(e, discord.HTTPException):
                         exc_msg = "Caught HTTP exception"
@@ -380,7 +426,10 @@ class DiscordClient(discord.Client):
                 await asyncio.sleep(retry_sec)
 
     @discord_retry(desc="sending message to channel")  # type: ignore[call-arg]
-    async def send_msg_to_channel(self, channel, send_kwargs):
+    async def send_msg_to_channel(
+            self,
+            channel: discord.TextChannel,
+            send_kwargs: dict[str, Union[str, Optional[list[discord.Embed]]]]) -> Optional[discord.Message]:
         """
         Send a single message to a channel
 
@@ -389,12 +438,17 @@ class DiscordClient(discord.Client):
         """
         if self.dry_run:
             logger.info("DRY RUN: channel.send(**kwargs)")
-            return
+            return None
 
-        return await channel.send(**send_kwargs)
+        # mypy doesn't like how I've declared the kwargs, ignore this for now:
+        # 'No overload variant of "send" of "Messageable" matches argument type ...'
+        return await channel.send(**send_kwargs)  # type: ignore[call-overload]
 
     @discord_retry(desc="creating thread")  # type: ignore[call-arg]
-    async def create_thread(self, root_message, thread_name):
+    async def create_thread(
+            self,
+            root_message: discord.Message,
+            thread_name: str) -> Optional[discord.Thread]:
         """
         Create a thread rooted at the given message, with the given name.
 
@@ -403,12 +457,15 @@ class DiscordClient(discord.Client):
         """
         if self.dry_run:
             logger.info(f"DRY RUN: root_message.create_thread(name={thread_name})")
-            return
+            return None
 
         return await root_message.create_thread(name=thread_name)
 
     @discord_retry(desc="sending message to thread")  # type: ignore[call-arg]
-    async def send_msg_to_thread(self, thread, send_kwargs):
+    async def send_msg_to_thread(
+            self,
+            thread: discord.Thread,
+            send_kwargs: dict[str, Union[str, Optional[list[discord.Embed]]]]) -> Optional[discord.Message]:
         """
         Send a single message to a thread
 
@@ -417,12 +474,17 @@ class DiscordClient(discord.Client):
         """
         if self.dry_run:
             logger.info("DRY_RUN: thread.send(**kwargs)")
-            return
+            return None
 
-        return await thread.send(**send_kwargs)
+        # mypy doesn't like how I've declared the kwargs, ignore this for now:
+        # 'No overload variant of "send" of "Messageable" matches argument type ...'
+        return await thread.send(**send_kwargs)  # type: ignore[call-overload]
 
     @discord_retry(desc="adding files to message")  # type: ignore[call-arg]
-    async def add_files_to_message(self, message, add_files_args):
+    async def add_files_to_message(
+            self,
+            message: discord.Message,
+            add_files_args: list[discord.File]) -> Optional[discord.Message]:
         """
         Add files to a message by uploading as attachments
 
@@ -431,6 +493,6 @@ class DiscordClient(discord.Client):
         """
         if self.dry_run:
             logger.info("DRY_RUN: message.add_files(*add_files_args)")
-            return
+            return None
 
         return await message.add_files(*add_files_args)

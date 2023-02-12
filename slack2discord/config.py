@@ -1,20 +1,21 @@
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 import logging
 from os import environ
 from os.path import dirname, isfile, join
 from sys import argv, exit
 from textwrap import dedent
+from typing import Optional
 
 
 logger = logging.getLogger(__name__)
 
 
-DESCRIPTION = dedent(
+DESCRIPTION: str = dedent(
     """
     slack2discord parses data exported from Slack, and imports it to Discord.
     """)
 
-USAGE = dedent(
+USAGE: str = dedent(
     f"""
     {argv[0]} [--token TOKEN] [--server SERVER] [--create] \\
         [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] [--ignore-file-not-found] \\
@@ -54,7 +55,7 @@ USAGE = dedent(
     post to existing channels.
     """)
 
-EPILOG = dedent(
+EPILOG: str = dedent(
     """
     Prior to running this script, you must create a slack2discord application in your Discord and
     create a token at:
@@ -64,7 +65,7 @@ EPILOG = dedent(
         https://slack.com/help/articles/201658943-Export-your-workspace-data
     """)
 
-def exit_usage(msg):
+def exit_usage (msg: str) -> None:
     """
     Exit with a specific error message, plus the usage, if the specific config is not legal.
     """
@@ -73,7 +74,7 @@ def exit_usage(msg):
     exit(1)
 
 
-def get_token(config):
+def get_token(config: Namespace) -> None:
     """
     Ensure that we have a discord token
 
@@ -100,7 +101,7 @@ def get_token(config):
                " DISCORD_TOKEN env var, or .discord_token file in same dir as script")
 
 
-def check_config(config):
+def check_config(config: Namespace) -> None:
     """
     Check that the config is legal.
 
@@ -141,7 +142,7 @@ def check_config(config):
         exit_usage("Discord token is not set (cmd line arg, env var, or dot file)")
 
 
-def get_config(argv):
+def get_config(argv: list[str]) -> Namespace:
     """
     Parse args and return the config.
     """

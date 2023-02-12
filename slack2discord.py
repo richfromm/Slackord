@@ -3,6 +3,7 @@
 # This is originally based on Slackord, by Thomas Loupe
 # Enough chaanges led to a hard fork, it is now slack2discord, by Rich Fromm
 
+from argparse import Namespace
 import asyncio
 import logging
 from sys import argv, exit
@@ -24,14 +25,14 @@ if __name__ == '__main__':
     # So set it up manually.
     setup_logging(root=True)
 
-    config = get_config(argv)
+    config: Namespace = get_config(argv)
     if config.verbose:
         logger.info("Verbose output enabled, setting log level to DEBUG")
         logger.setLevel(logging.DEBUG)
 
     # parse either a single file (one day of one Slack channel),
     # or all of the files in a dir (all days for one Slack channel)
-    parser = SlackParser(
+    parser: SlackParser = SlackParser(
         src_file=config.src_file,
         src_dir=config.src_dir,
         dest_channel=config.dest_channel,
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     )
     parser.parse()
 
-    downloader = SlackDownloader(
+    downloader: SlackDownloader = SlackDownloader(
         parsed_messages=parser.parsed_messages,
         downloads_dir=config.downloads_dir,
         ignore_not_found=config.ignore_file_not_found,
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     downloader.download()
 
     # post the parsed Slack messages to Discord channel(s)
-    client = DiscordClient(
+    client: DiscordClient = DiscordClient(
         token=config.token,
         parsed_messages=parser.parsed_messages,
         server_name=config.server,
