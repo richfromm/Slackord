@@ -215,9 +215,11 @@ def get_config(argv):
                         help="Directory in which to download any files attached to Slack messages,"
                         " before uploading them to Discord. If not present, will default to a"
                         " newly created dir of the form './downloads/<timestamp>', relative to the"
-                        " location of this script. Unless resuming from a previously failed script"
-                        " execution, it is highly recommended that each execution of the script"
-                        " use a unique directory.")
+                        " location of this script. Existing files in an existing dir will be"
+                        " re-used if the file size matches the remote. Unless resuming from a"
+                        " previously failed script execution, or executing for real after a dry"
+                        " run, it is recommended that each execution of the script use a unique"
+                        " directory.")
 
     parser.add_argument('--ignore-file-not-found',
                         required=False,

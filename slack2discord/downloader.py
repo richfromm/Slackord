@@ -1,9 +1,11 @@
 import logging
 from os import makedirs
-from os.path import dirname, exists, isdir, join, realpath
+from os.path import dirname, exists, getsize, isdir, isfile, join, realpath
 from time import time
+from typing import Optional
 
-from requests import codes, get
+from requests import codes, get, head
+from tqdm import tqdm
 
 from .message import ParsedMessage, MessageFile
 
@@ -35,7 +37,7 @@ class SlackDownloader():
         logger.info(f"Downloaded files from Slack (if any) will be placed in {downloads_dir}")
         if exists(downloads_dir):
             if isdir(downloads_dir):
-                logger.warn(f"Downloads dir already exists: {downloads_dir}")
+                logger.info(f"Downloads dir already exists: {downloads_dir}")
             else:
                 error_msg = f"Downloads dir already exists but is **NOT** a dir: {downloads_dir}"
                 logger.error(error_msg)
@@ -83,7 +85,27 @@ class SlackDownloader():
                     for thread_message in thread.values():
                         self._add_files(thread_message)
 
-    def _wget(self, url, filename, ignore_not_found = False) -> None:
+    def _getsize_remote(self, url) -> Optional[int]:
+        """
+        Return the size of a remote file (assuming that's what's located at the specified HTTP
+        URL), in bytes, via the Content-Length HTTP header.  If we are unable to do so, for
+        whatever reason, return None
+        """
+        with head(url) as resp:
+            if not resp.ok:
+                logger.warning(
+                    f"Unable to get size of remote URL {url} (HTTP response not OK)")
+                return None
+
+            size = resp.headers.get('Content-Length')
+            if size is None:
+                logger.warning(
+                    f"Unable to get size of remote URL {url} (missing Content-Length header)")
+                return None
+
+            return int(size)
+
+    def _wget(self, url, filename, ignore_not_found = False) -> bool:
         """
         Fetch a file via HTTP GET from the given URL, and store it in the local filename.
 
@@ -109,20 +131,22 @@ class SlackDownloader():
         if exists(filename):
             logger.warning(f"local filename already exists, will overwrite: {filename}")
 
-        with get(url) as req:
+        with get(url) as resp:
             # Special case 404 errors, allowing user to ignore.
             # All other HTTP errors raise an exception and fail.
-            if req.status_code == codes.not_found:
+            if resp.status_code == codes.not_found:
                 if ignore_not_found:
                     logger.warning(f"Not found error returned fetching {url} to {filename}, ignoring.")
                     return False
                 logger.error(f"Not found error returned fetching {url} to {filename}."
-                             " You can ignore all of these with --ignore-file-not-found")
+                             ' You can ignore all of these with "--ignore-file-not-found".')
+                logger.info("If you wish to resume and re-use existing successfully downloaded"
+                            f' files, you can also specify "--downloads-dir {self.downloads_dir}"')
                 # intentional fall through, since we **do** want to raise the error next
 
-            req.raise_for_status()
+            resp.raise_for_status()
             with open(filename, 'wb') as file:
-                file.write(req.content)
+                file.write(resp.content)
 
         return True
 
@@ -147,19 +171,32 @@ class SlackDownloader():
 
         success = 0
         not_found = 0
-        for file in self.files:
+        skipped = 0
+        for file in tqdm(self.files):
             # using file.name would be more descriptive
             # but that risks filename collisions
             # we could place each file in its own dir, e.g. self.downloads_dir/file.id/file.name
             # but that would be more awkward to work with
             file.local_filename = join(self.downloads_dir, file.id)
+
+            # don't download the file if it already exists and the size has not changed
+            if isfile(file.local_filename):
+                local_size = getsize(file.local_filename)
+                remote_size = self._getsize_remote(file.url)
+                if remote_size and (local_size == remote_size):
+                   logger.debug(f"Skipping URL {file.url} which is covered by already existing"
+                                f" {local_size} byte local file {file.local_filename}")
+                   skipped += 1
+                   continue
+
             if self._wget(file.url, file.local_filename, self.ignore_not_found):
                 success += 1
             else:
                 file.not_found = True
                 not_found += 1
 
-        assert success + not_found == len(self.files)
+        assert success + not_found + skipped == len(self.files)
         logger.info(f"Successfully downloaded {success} files to {self.downloads_dir}")
+        logger.info(f"Skipped {skipped} files that already existed locally")
         if not_found > 0:
             logger.warning(f"Ignored {not_found} files not found")

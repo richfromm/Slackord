@@ -42,10 +42,13 @@ a `.py` suffix included in the package name_)
 * `requests` ([docs](https://requests.readthedocs.io/en/latest/),
 [pypi](https://pypi.org/project/requests/),
 [source](https://github.com/psf/requests))
+* `tqdm` ([docs](https://tqdm.github.io/),
+[pypi](https://pypi.org/project/tqdm/),
+[source](https://github.com/tqdm/tqdm))
 
 via:
 
-    pip install discord.py decorator requests
+    pip install discord.py decorator requests tqdm
 
 For help creating virtual environments, see the
 [venv](https://docs.python.org/3/library/venv.html) docs. If you use Python a
