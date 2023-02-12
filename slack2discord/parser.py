@@ -3,7 +3,8 @@ import json
 import logging
 from os import listdir
 from os.path import basename, dirname, exists, join, isdir, realpath
-from re import match, sub
+from re import match, sub, Match
+from typing import cast, Any, Optional, Union
 
 from .message import ParsedMessage
 
@@ -17,12 +18,12 @@ class SlackParser():
     to interpret the content of messages to post to Discord
     """
     def __init__(self,
-                 src_file: str = None,
-                 src_dir: str = None,
-                 dest_channel: str = None,
-                 src_dirtree: str = None,
-                 channel_file: str = None,
-                 users_file: str = None,
+                 src_file: Optional[str] = None,
+                 src_dir: Optional[str] = None,
+                 dest_channel: Optional[str] = None,
+                 src_dirtree: Optional[str] = None,
+                 channel_file: Optional[str] = None,
+                 users_file: Optional[str] = None,
                  verbose: bool = False) -> None:
         # These are from the config, some will be None
         self.src_file = src_file
@@ -60,13 +61,17 @@ class SlackParser():
         self.verbose = verbose
 
         # See set_channel_map() for details
-        self.channel_map: dict[str, str] = dict()
+        self.channel_map: dict[Optional[str], str] = dict()
 
         # See parse() for details
-        self.parsed_messages: dict[str, dict[float, tuple[ParsedMessage, dict[float, list[ParsedMessage]]]]] = dict()
+        self.parsed_messages: dict[str,
+                                   dict[float,
+                                        tuple[ParsedMessage,
+                                              Optional[dict[float,
+                                                            ParsedMessage]]]]] = dict()
 
     @staticmethod
-    def is_slack_export_filename(filename):
+    def is_slack_export_filename(filename: str) -> Optional[Match]:
         """
         Check if the given filename is of the form expected for a slack export JSON file
 
@@ -75,7 +80,7 @@ class SlackParser():
         return match('\A\d\d\d\d-\d\d-\d\d.json\Z', basename(filename))
 
     @staticmethod
-    def format_time(timestamp):
+    def format_time(timestamp: Union[int, float]) -> str:
         """
         Given a timestamp in seconds (potentially fractional) since the epoch,
         format it in a useful human readable manner
@@ -83,7 +88,7 @@ class SlackParser():
         return datetime.fromtimestamp(timestamp).isoformat(sep=' ', timespec='seconds')
 
     @staticmethod
-    def format_message(timestamp, name, message):
+    def format_message(timestamp: Union[int, float], name: Optional[str], message: str) -> str:
         """
         Given a timestamp, name, and message from slack,
         format it into a message to post to discord
@@ -100,7 +105,7 @@ class SlackParser():
             return f"`{SlackParser.format_time(timestamp)}`{message_sep}{message}"
 
     @staticmethod
-    def unescape_url(url):
+    def unescape_url(url: Optional[str]) -> Optional[str]:
         """
         The Slack export escapes all slashes (/) in URL's with a backslash (\/). Undo this.
 
@@ -117,7 +122,7 @@ class SlackParser():
         return sub('\\\/', '/', url)
 
     @staticmethod
-    def unescape_text(text):
+    def unescape_text(text: Optional[str]) -> Optional[str]:
         """
         The slack export converts slack control characters to HTML entities. Undo this.
 
@@ -130,6 +135,9 @@ class SlackParser():
         For more details, see:
         https://api.slack.com/reference/surfaces/formatting#escaping
         """
+        if text is None:
+            return None
+
         unescaped_amp = sub('&amp;', '&', text)
         unescaped_amp_lt = sub('&lt;', '<', unescaped_amp)
         unescaped_amp_lt_gt = sub('&gt;', '>', unescaped_amp_lt)
@@ -137,7 +145,7 @@ class SlackParser():
         return unescaped_amp_lt_gt
 
     @staticmethod
-    def fix_markdown(text):
+    def fix_markdown(text: Optional[str]) -> Optional[str]:
         """
         Fix some non-standard Slack Markdown syntax
 
@@ -156,6 +164,9 @@ class SlackParser():
         * https://www.markdownguide.org/tools/slack/
         * https://www.markdownguide.org/tools/discord/
         """
+        if text is None:
+            return None
+
         # The asterisk for bold needs to be escaped in the regex, b/c otherwise it means "0 or
         # more". It does *not* need to be escaped in the substitution string.
         SLACK_BOLD_RE = "(\*)(\S+|\S.*\S)(\*)"
@@ -215,7 +226,12 @@ class SlackParser():
         else:
             logger.info(f"{len(self.users)} users successfully parsed")
 
-    def get_name(self, message: dict, timestamp: float, filename: str) -> str:
+    def get_name(
+            self,
+            message: dict[str, Union[str, list[Any], dict[str, Any]]],
+            timestamp: float,
+            filename: str
+    ) -> str:
         """
         Given a message from slack, return a name to be used in formatting a message for discord.
 
@@ -223,11 +239,11 @@ class SlackParser():
         parsed from users.json, see parse_users()) to get the user name.  We fall back to info
         within the message if that is not successful.
         """
-        user_id = message.get('user')
+        user_id: str = cast(str, message.get('user'))
         if user_id in self.users:
             return self.users[user_id]
 
-        user_profile = message.get('user_profile')
+        user_profile: dict[str, str] = cast(dict[str, str], message.get('user_profile'))
         if user_profile:
             display_name = user_profile.get('display_name')
             if display_name:
@@ -246,7 +262,7 @@ class SlackParser():
                        f" in file {filename}")
         return '???'
 
-    def set_channel_map(self):
+    def set_channel_map(self) -> None:
         """
         Populate a dict where the keys are Slack channel names and the values are corresponding
         Discord channel names.
@@ -261,7 +277,7 @@ class SlackParser():
 
         Does not return anything, the results populate the class member self.channel_map
         """
-        def canonicalize(channel_name):
+        def canonicalize(channel_name: str) -> str:
             """
             Strip the leading pound sign (#) if present in a channel name
             """
@@ -277,11 +293,17 @@ class SlackParser():
 
         if self.src_file:
             # one channel only, one file
-            self.channel_map[None] = canonicalize(self.dest_channel)
+            # self.dest_channel in theory can be None,
+            # but in practice it should be set in this case
+            assert self.dest_channel is not None
+            self.channel_map[None] = canonicalize(cast(str, self.dest_channel))
 
         elif self.src_dir:
             # one channel only, one dir
-            self.channel_map[basename(self.src_dir)] = canonicalize(self.dest_channel)
+            # self.dest_channel in theory can be None,
+            # but in practice it should be set in this case
+            assert self.dest_channel is not None
+            self.channel_map[basename(self.src_dir)] = canonicalize(cast(str, self.dest_channel))
 
         elif self.src_dirtree:
             # multiple channels
@@ -304,7 +326,7 @@ class SlackParser():
                             # empty line, okay, skip
                             pass
                         elif len(fields) > 2:
-                            raise RuntimeException(
+                            raise RuntimeError(
                                 "Line in file mapping Slack to Discord channels has too many"
                                 f" fields: {fields}")
                         else:
@@ -349,7 +371,7 @@ class SlackParser():
           - the first item is a ParsedMessage object
           - the second item is a dict if this message has a thread, otherwise None.
             - the keys are the timestamps of the messages within the thread
-            - the values are a list of ParsedMessage objects
+            - the values are ParsedMessage objects
 
         Does not return anything, the results populate the class member self.parsed_messages
         """
@@ -361,7 +383,7 @@ class SlackParser():
 
         logger.info("Messages from Slack export successfully parsed.")
 
-    def parse_channel(self, slack_channel, discord_channel):
+    def parse_channel(self, slack_channel: Optional[str], discord_channel: str) -> None:
         """
         Parse all of the files that we will import to a single Discord channel.
 
@@ -375,7 +397,10 @@ class SlackParser():
         Does not return anything, the results populate the class member self.parsed_messages
         See parse() above for more details.
         """
-        channel_msgs_dict = dict()
+        channel_msgs_dict: dict[float,
+                                tuple[ParsedMessage,
+                                      Optional[dict[float,
+                                                    ParsedMessage]]]] = dict()
 
         if slack_channel:
             # parse all of the files in a dir for a single slack channel
@@ -413,7 +438,14 @@ class SlackParser():
         self.output_messages(discord_channel, channel_msgs_dict)
         self.parsed_messages[discord_channel] = channel_msgs_dict
 
-    def parse_file(self, filename, channel_msgs_dict):
+    def parse_file(
+            self,
+            filename: str,
+            channel_msgs_dict: dict[float,
+                                    tuple[ParsedMessage,
+                                          Optional[dict[float,
+                                                        ParsedMessage]]]]
+    ) -> None:
         """
         Parse a single JSON file that contains exported messages from a slack channel.
 
@@ -437,7 +469,15 @@ class SlackParser():
 
         logger.info(f"Messages from Slack export file successfully parsed: {filename}")
 
-    def parse_message(self, message, filename, channel_msgs_dict):
+    def parse_message(
+            self,
+            message: dict[str, Union[str, list[Any], dict[str, Any]]],
+            filename: str,
+            channel_msgs_dict: dict[float,
+                                    tuple[ParsedMessage,
+                                          Optional[dict[float,
+                                                        ParsedMessage]]]]
+    ) -> None:
         """
         Parse a single message that was loaded from the JSON file with the given filename.
 
@@ -457,44 +497,51 @@ class SlackParser():
             logger.warning("Message is missing timestamp, skipping.")
             return
 
-        timestamp = float(message['ts'])
+        # in general, values in the JSON could be lists or dicts, but in this case we know it's a
+        # string representing a float
+        timestamp = float(cast(str, message['ts']))
         name = self.get_name(message, timestamp, filename)
         # According to the docs, 'text' should always be present.  And in practice,
         # even for no text (possible in a file attachment case, which is not yet
         # supported), the key should be present, with an empty string value.
         # Regardless, provide an empty string as a default value just in case it's not
         # present.
-        message_text = SlackParser.fix_markdown(
+        message_text: str = cast(str, SlackParser.fix_markdown(
             SlackParser.unescape_text(
                 SlackParser.unescape_url(
-                    message.get('text', ""))))
+                    cast(str, message.get('text', ""))))))
         full_message_text = SlackParser.format_message(timestamp, name, message_text)
         parsed_message = ParsedMessage(full_message_text)
 
         if 'attachments' in message:
             for attachment in message['attachments']:
-                parsed_message.add_link(attachment)
+                parsed_message.add_link(cast(dict[str, Any], attachment))
 
         if 'files' in message:
             for file in message['files']:
+                file = cast(dict[str, Any], file)
                 if file.get('mode') == 'tombstone':
                     # File was deleted from Slack, just log this,
                     # don't bother mentioning this state in the Discord import.
                     if 'date_deleted' in file:
                         logger.warning("Attached file was deleted at"
-                                       f" {SlackParser.format_time(file['date_deleted'])}. Ignoring.")
+                            f" {SlackParser.format_time(cast(int, file['date_deleted']))}."
+                            " Ignoring.")
                     else:
                         logger.warning(f"Attached file was deleted. Ignoring.")
                 else:
                     # Normal attached file case
-                    parsed_message.add_file(file)
+                    parsed_message.add_file(cast(dict[str, Any], file))
 
         if 'replies' in message:
             # this is the head of a thread
-            channel_msgs_dict[timestamp] = (parsed_message, dict())
+            empty_thread_dict: dict[float, ParsedMessage] = dict()
+            channel_msgs_dict[timestamp] = (parsed_message, empty_thread_dict)
         elif 'thread_ts' in message:
             # this is within a thread
-            thread_timestamp = float(message['thread_ts'])
+            # in general, values in the JSON could be lists or dicts, but in this case we know it's
+            # a string representing a float
+            thread_timestamp = float(cast(str, message['thread_ts']))
             if thread_timestamp not in channel_msgs_dict:
                 # can't find the root of the thread to which this message belongs
                 # ideally this shouldn't happen
@@ -504,16 +551,29 @@ class SlackParser():
                                " synthetic thread")
                 fake_message_text = SlackParser.format_message(
                     thread_timestamp, None, '_Unable to find start of exported thread_')
-                channel_msgs_dict[thread_timestamp] = (parsed_message, dict())
+                fake_message = ParsedMessage(fake_message_text)
+                empty_fake_thread_dict: dict[float, ParsedMessage] = dict()
+                channel_msgs_dict[thread_timestamp] = (fake_message, empty_fake_thread_dict)
 
             # add to the dict either for the existing thread
             # or the fake thread that we created above
-            channel_msgs_dict[thread_timestamp][1][timestamp] = parsed_message
+            this_thread: Optional[dict[float,
+                                       ParsedMessage]] = channel_msgs_dict[thread_timestamp][1]
+            # in theory there might not be a thread, but in practice there should be in this case
+            assert this_thread is not None
+            cast(dict[float, ParsedMessage], this_thread)[timestamp] = parsed_message
         else:
             # this is not associated with a thread at all
             channel_msgs_dict[timestamp] = (parsed_message, None)
 
-    def output_messages(self, discord_channel, channel_msgs_dict):
+    def output_messages(
+            self,
+            discord_channel: str,
+            channel_msgs_dict: dict[float,
+                                    tuple[ParsedMessage,
+                                          Optional[dict[float,
+                                                        ParsedMessage]]]]
+    ) -> None:
         """
         Log the parsed messages (or a summary) for a single channel
         """
