@@ -8,6 +8,7 @@ from requests import codes, get, head
 from tqdm import tqdm
 
 from .message import ParsedMessage, MessageFile
+from .parser import ThreadType
 
 
 logger = logging.getLogger(__name__)
@@ -25,16 +26,14 @@ class SlackDownloader():
                  parsed_messages: dict[str,
                                        dict[float,
                                             tuple[ParsedMessage,
-                                                  Optional[dict[float,
-                                                                ParsedMessage]]]]],
+                                                  Optional[ThreadType]]]],
                  downloads_dir: str = None,
                  ignore_not_found: bool = False) -> None:
         # see SlackParser.parse() for details
         self.parsed_messages: dict[str,
                                    dict[float,
                                         tuple[ParsedMessage,
-                                              Optional[dict[float,
-                                                            ParsedMessage]]]]] = parsed_messages
+                                              Optional[ThreadType]]]] = parsed_messages
 
         if downloads_dir is None:
             # second level accuracy is probably sufficient

@@ -8,6 +8,7 @@ from typing import Callable, Optional, Union, Sequence
 import discord
 
 from .message import ParsedMessage
+from .parser import ThreadType
 
 
 logger = logging.getLogger(__name__)
@@ -25,8 +26,7 @@ class DiscordClient(discord.Client):
             parsed_messages: dict[str,
                                   dict[float,
                                        tuple[ParsedMessage,
-                                             Optional[dict[float,
-                                                           ParsedMessage]]]]],
+                                             Optional[ThreadType]]]],
             server_name: Optional[str] = None,
             create_channels: bool = False,
             verbose: bool = False,
@@ -38,8 +38,7 @@ class DiscordClient(discord.Client):
         self.parsed_messages: dict[str,
                                    dict[float,
                                         tuple[ParsedMessage,
-                                              Optional[dict[float,
-                                                            ParsedMessage]]]]] = parsed_messages
+                                              Optional[ThreadType]]]] = parsed_messages
         # name if Discord server. internally referred to as "guild".
         # optional, not needed if this client is only a member of one guild.
         self.server_name: Optional[str] = server_name
@@ -307,8 +306,7 @@ class DiscordClient(discord.Client):
             channel: Optional[discord.TextChannel],
             channel_msgs_dict: dict[float,
                                     tuple[ParsedMessage,
-                                          Optional[dict[float,
-                                                        ParsedMessage]]]]) -> None:
+                                          Optional[ThreadType]]]) -> None:
         """
         This posts all of the messages of the previously parsed JSON files from a Slack export
         to a single channel.

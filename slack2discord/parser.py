@@ -4,12 +4,14 @@ import logging
 from os import listdir
 from os.path import basename, dirname, exists, join, isdir, realpath
 from re import match, sub, Match
-from typing import cast, Any, Optional, Union
+from typing import cast, Any, NewType, Optional, Union
 
 from .message import ParsedMessage
 
 
 logger = logging.getLogger(__name__)
+
+ThreadType = NewType('ThreadType', dict[float, ParsedMessage])
 
 
 class SlackParser():
@@ -67,8 +69,7 @@ class SlackParser():
         self.parsed_messages: dict[str,
                                    dict[float,
                                         tuple[ParsedMessage,
-                                              Optional[dict[float,
-                                                            ParsedMessage]]]]] = dict()
+                                              Optional[ThreadType]]]] = dict()
 
     @staticmethod
     def is_slack_export_filename(filename: str) -> Optional[Match]:
@@ -399,8 +400,7 @@ class SlackParser():
         """
         channel_msgs_dict: dict[float,
                                 tuple[ParsedMessage,
-                                      Optional[dict[float,
-                                                    ParsedMessage]]]] = dict()
+                                      Optional[ThreadType]]] = dict()
 
         if slack_channel:
             # parse all of the files in a dir for a single slack channel
@@ -443,8 +443,7 @@ class SlackParser():
             filename: str,
             channel_msgs_dict: dict[float,
                                     tuple[ParsedMessage,
-                                          Optional[dict[float,
-                                                        ParsedMessage]]]]
+                                          Optional[ThreadType]]]
     ) -> None:
         """
         Parse a single JSON file that contains exported messages from a slack channel.
@@ -475,8 +474,7 @@ class SlackParser():
             filename: str,
             channel_msgs_dict: dict[float,
                                     tuple[ParsedMessage,
-                                          Optional[dict[float,
-                                                        ParsedMessage]]]]
+                                          Optional[ThreadType]]]
     ) -> None:
         """
         Parse a single message that was loaded from the JSON file with the given filename.
@@ -535,7 +533,7 @@ class SlackParser():
 
         if 'replies' in message:
             # this is the head of a thread
-            empty_thread_dict: dict[float, ParsedMessage] = dict()
+            empty_thread_dict: ThreadType = cast(ThreadType, dict())
             channel_msgs_dict[timestamp] = (parsed_message, empty_thread_dict)
         elif 'thread_ts' in message:
             # this is within a thread
@@ -552,16 +550,15 @@ class SlackParser():
                 fake_message_text = SlackParser.format_message(
                     thread_timestamp, None, '_Unable to find start of exported thread_')
                 fake_message = ParsedMessage(fake_message_text)
-                empty_fake_thread_dict: dict[float, ParsedMessage] = dict()
+                empty_fake_thread_dict: ThreadType = cast(ThreadType, dict())
                 channel_msgs_dict[thread_timestamp] = (fake_message, empty_fake_thread_dict)
 
             # add to the dict either for the existing thread
             # or the fake thread that we created above
-            this_thread: Optional[dict[float,
-                                       ParsedMessage]] = channel_msgs_dict[thread_timestamp][1]
+            this_thread: Optional[ThreadType] = channel_msgs_dict[thread_timestamp][1]
             # in theory there might not be a thread, but in practice there should be in this case
             assert this_thread is not None
-            cast(dict[float, ParsedMessage], this_thread)[timestamp] = parsed_message
+            cast(ThreadType, this_thread)[timestamp] = parsed_message
         else:
             # this is not associated with a thread at all
             channel_msgs_dict[timestamp] = (parsed_message, None)
@@ -571,8 +568,7 @@ class SlackParser():
             discord_channel: str,
             channel_msgs_dict: dict[float,
                                     tuple[ParsedMessage,
-                                          Optional[dict[float,
-                                                        ParsedMessage]]]]
+                                          Optional[ThreadType]]]
     ) -> None:
         """
         Log the parsed messages (or a summary) for a single channel
