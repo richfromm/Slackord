@@ -220,7 +220,7 @@ class DiscordClient(discord.Client):
 
         elif len(channels) > 1:
             # I suspect this may not actually be possible in practice
-            error_msg = f"Found multiple Discord channels with the same name {channel}:" \
+            error_msg = f"Found multiple Discord channels with the same name {channel_name}:" \
                 + f" id {[channel.id for channel in channels]}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
