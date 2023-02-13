@@ -8,7 +8,7 @@ from requests import codes, get, head
 from tqdm import tqdm
 
 from .message import ParsedMessage, MessageFile
-from .parser import MessagesPerChannelType, RootPlusThreadType, ThreadType
+from .parser import MessagesAllChannelsType, MessagesPerChannelType, RootPlusThreadType, ThreadType
 
 
 logger = logging.getLogger(__name__)
@@ -23,11 +23,11 @@ class SlackDownloader():
     This behavior can be overridden and they can be ignored with ignore_not_found.
     """
     def __init__(self,
-                 parsed_messages: dict[str, MessagesPerChannelType],
+                 parsed_messages: MessagesAllChannelsType,
                  downloads_dir: str = None,
                  ignore_not_found: bool = False) -> None:
         # see SlackParser.parse() for details
-        self.parsed_messages: dict[str, MessagesPerChannelType]  = parsed_messages
+        self.parsed_messages: MessagesAllChannelsType = parsed_messages
 
         if downloads_dir is None:
             # second level accuracy is probably sufficient

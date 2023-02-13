@@ -82,7 +82,7 @@ class SlackParser():
         self.channel_map: dict[Optional[str], str] = dict()
 
         # See parse() for details
-        self.parsed_messages: dict[str, MessagesPerChannelType] = dict()
+        self.parsed_messages: MessagesAllChannelsType = cast(MessagesAllChannelsType, dict())
 
     @staticmethod
     def is_slack_export_filename(filename: str) -> Optional[Match]:

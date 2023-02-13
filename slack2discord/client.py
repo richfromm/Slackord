@@ -8,7 +8,7 @@ from typing import Callable, Optional, Union, Sequence
 import discord
 
 from .message import ParsedMessage
-from .parser import MessagesPerChannelType, RootPlusThreadType, ThreadType
+from .parser import MessagesAllChannelsType, MessagesPerChannelType, RootPlusThreadType, ThreadType
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class DiscordClient(discord.Client):
     def __init__(
             self,
             token: str,
-            parsed_messages: dict[str, MessagesPerChannelType],
+            parsed_messages: MessagesAllChannelsType,
             server_name: Optional[str] = None,
             create_channels: bool = False,
             verbose: bool = False,
@@ -32,7 +32,7 @@ class DiscordClient(discord.Client):
         self.token: str = token
 
         # see SlackParser.parse() for details
-        self.parsed_messages: dict[str, MessagesPerChannelType] = parsed_messages
+        self.parsed_messages: MessagesAllChannelsType = parsed_messages
         # name if Discord server. internally referred to as "guild".
         # optional, not needed if this client is only a member of one guild.
         self.server_name: Optional[str] = server_name
