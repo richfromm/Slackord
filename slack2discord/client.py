@@ -69,10 +69,14 @@ class DiscordClient(discord.Client):
         # reliable “fire-and-forget” background tasks, gather them in a collection.
         self.bg_task = self.loop.create_task(self.post_messages())
 
-    async def on_ready(self):
-        logger.info(f"In on_ready(), logged in as {self.user} (ID: {self.user.id})")
+    async def on_ready(self) -> None:
+        msg = f"In on_ready(), logged in as {self.user}"
+        if self.user:
+            msg += f" (ID: {self.user.id})"
+        logger.info(msg)
 
-    def run(self):
+    # Different signature from superclass run() and therefore different name to not collide
+    def do_run(self) -> None:
         """
         Wrapper around https://discordpy.readthedocs.io/en/latest/api.html#discord.Client.run
         using the already supplied token

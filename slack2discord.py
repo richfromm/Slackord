@@ -61,7 +61,7 @@ if __name__ == '__main__':
     )
     # if Ctrl-C is pressed, we do *not* get a KeyboardInterrupt
     # b/c it is caught by the run() loop in the discord client
-    client.run()
+    client.do_run()
 
     # XXX return values of asyncio functions are tricky, don't worry about it for now
     #     we could set a boolean on success within the client
