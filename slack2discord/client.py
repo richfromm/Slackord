@@ -8,7 +8,7 @@ from typing import Callable, Optional, Union, Sequence
 import discord
 
 from .message import ParsedMessage
-from .parser import MessagesAllChannelsType, MessagesPerChannelType, RootPlusThreadType, ThreadType
+from .parser import MessagesAllChannelsType, MessagesPerChannelType
 
 
 logger = logging.getLogger(__name__)

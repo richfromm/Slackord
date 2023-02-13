@@ -8,7 +8,7 @@ from requests import codes, get, head
 from tqdm import tqdm
 
 from .message import ParsedMessage, MessageFile
-from .parser import MessagesAllChannelsType, MessagesPerChannelType, RootPlusThreadType, ThreadType
+from .parser import MessagesAllChannelsType
 
 
 logger = logging.getLogger(__name__)
