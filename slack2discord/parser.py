@@ -82,8 +82,7 @@ class SlackParser():
         self.channel_map: dict[Optional[str], str] = dict()
 
         # See parse() for details
-        self.parsed_messages: dict[str,
-                                   dict[float, RootPlusThreadType]] = dict()
+        self.parsed_messages: dict[str, MessagesPerChannelType] = dict()
 
     @staticmethod
     def is_slack_export_filename(filename: str) -> Optional[Match]:
@@ -413,7 +412,7 @@ class SlackParser():
         Does not return anything, the results populate the class member self.parsed_messages
         See parse() above for more details.
         """
-        channel_msgs_dict: dict[float, RootPlusThreadType] = dict()
+        channel_msgs_dict: MessagesPerChannelType = cast(MessagesPerChannelType, dict())
 
         if slack_channel:
             # parse all of the files in a dir for a single slack channel
@@ -454,7 +453,7 @@ class SlackParser():
     def parse_file(
             self,
             filename: str,
-            channel_msgs_dict: dict[float, RootPlusThreadType]
+            channel_msgs_dict: MessagesPerChannelType
     ) -> None:
         """
         Parse a single JSON file that contains exported messages from a slack channel.
@@ -483,7 +482,7 @@ class SlackParser():
             self,
             message: dict[str, Union[str, list[Any], dict[str, Any]]],
             filename: str,
-            channel_msgs_dict: dict[float, RootPlusThreadType]
+            channel_msgs_dict: MessagesPerChannelType
     ) -> None:
         """
         Parse a single message that was loaded from the JSON file with the given filename.
