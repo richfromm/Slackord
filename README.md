@@ -12,6 +12,7 @@ See [Script invocation](#script-invocation) below.
 If you find this software useful and would like to make a contribution, you
 can make a donation via either:
 
+* [GitHub Sponsors](https://github.com/sponsors/richfromm) [<img src="https://github.com/sponsors/richfromm/button" height="32" width="114" style="border: 0; border-radius: 6px;>](https://github.com/sponsors/richfromm)
 * [GitHub Sponsors](https://github.com/sponsors/richfromm) [![](https://github.com/sponsors/richfromm/button)](https://github.com/sponsors/richfromm)
 * [PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD) [![](paypal.png)](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
 
