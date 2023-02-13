@@ -24,7 +24,7 @@ class SlackDownloader():
     """
     def __init__(self,
                  parsed_messages: MessagesAllChannelsType,
-                 downloads_dir: str = None,
+                 downloads_dir: Optional[str] = None,
                  ignore_not_found: bool = False) -> None:
         # see SlackParser.parse() for details
         self.parsed_messages: MessagesAllChannelsType = parsed_messages
