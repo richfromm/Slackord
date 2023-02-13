@@ -12,22 +12,32 @@ from .message import ParsedMessage
 logger = logging.getLogger(__name__)
 
 
-# see the docstring for parse() for more details
-
+# see the docstring for parse() for more details on these types:
+#
 # these represent the messages within a thread (which may or may not exist)
 # the keys in the dict are the timestamps of the messages within the thread
 ThreadType = NewType('ThreadType', dict[float, ParsedMessage])
-
+#
 # this represents the root message, plus the associated thread (if it exists)
 RootPlusThreadType = NewType('RootPlusThreadType', tuple[ParsedMessage, Optional[ThreadType]])
-
+#
 # this represents all of the messages for a channel, organized into threads as appropriate
 # the keys in the dict are the timestamps of the messages in the main channel
 # (either the root of a thread if it exists, or just the singular message timestamp)
 MessagesPerChannelType = NewType('MessagesPerChannelType', dict[float, RootPlusThreadType])
-
+#
 # the keys are Discord channel names
 MessagesAllChannelsType = NewType('MessagesAllChannelsType', dict[str, MessagesPerChannelType])
+
+
+# map Slack user ID's to names
+# see parse_users() for details
+SlackUserMapType = NewType('SlackUserMapType', dict[str, str])
+
+# map Slack channel names to Discord channel names
+# the key is None in the src_file case
+# see set_channel_map() for details
+ChannelMapType = NewType('ChannelMapType', dict[Optional[str], str])
 
 
 class SlackParser():
@@ -74,12 +84,12 @@ class SlackParser():
 
         self.users_file = users_file
         # See parse_users() for details
-        self.users: dict[str, str] = dict()
+        self.users: SlackUserMapType = cast(SlackUserMapType, dict())
 
         self.verbose = verbose
 
         # See set_channel_map() for details
-        self.channel_map: dict[Optional[str], str] = dict()
+        self.channel_map: ChannelMapType = cast(ChannelMapType, dict())
 
         # See parse() for details
         self.parsed_messages: MessagesAllChannelsType = cast(MessagesAllChannelsType, dict())

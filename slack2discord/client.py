@@ -3,7 +3,7 @@ from decorator import decorator
 import logging
 from pprint import pprint
 from traceback import print_exc
-from typing import Callable, Optional, Union, Sequence
+from typing import cast, Callable, NewType, Optional, Union, Sequence
 
 import discord
 
@@ -12,6 +12,11 @@ from .parser import MessagesAllChannelsType, MessagesPerChannelType
 
 
 logger = logging.getLogger(__name__)
+
+
+# map Discord channel names to channel objects
+# Optional needed for potential None value b/c of the dry_run behavior of get_channel_by_name()
+DiscordChannelMap = NewType('DiscordChannelMap', dict[str, Optional[discord.TextChannel]])
 
 
 # template copied from https://github.com/Rapptz/discord.py/blob/master/examples/background_task_asyncio.py
@@ -33,13 +38,13 @@ class DiscordClient(discord.Client):
 
         # see SlackParser.parse() for details
         self.parsed_messages: MessagesAllChannelsType = parsed_messages
-        # name if Discord server. internally referred to as "guild".
+        # name of Discord server. internally referred to as "guild".
         # optional, not needed if this client is only a member of one guild.
         self.server_name: Optional[str] = server_name
         # create Discord channels if not present. if not set, then fail in this case.
         self.create_channels: bool = create_channels
         # a mapping of discord channel names to channel objects
-        self.channels: dict[str, Optional[discord.TextChannel]] = dict()
+        self.channels: DiscordChannelMap = cast(DiscordChannelMap, dict())
 
         self.verbose: bool = verbose
         self.dry_run: bool = dry_run
@@ -196,6 +201,7 @@ class DiscordClient(discord.Client):
         If the create option is not selected, and the channel does not exist, raise a RuntimeError.
 
         In the dry run creation case, return None.
+        Optional is needed for the retury type b/c of the dry run case.
         """
         channels = [channel
                     for channel in guild.text_channels
