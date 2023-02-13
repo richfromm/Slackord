@@ -19,6 +19,10 @@ can make a donation via either:
 * [GitHub Sponsors](https://github.com/sponsors/richfromm) [![](github.svg)](https://github.com/sponsors/richfromm)
 * [GitHub Sponsors](https://github.com/sponsors/richfromm) [![](github.png)](https://github.com/sponsors/richfromm)
 * [PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD) [![](paypal.png)](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
+* [PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
+  [<img src="paypal.png">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
+* [PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
+  [<img src="paypal.png" width="210" height="40">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
 
 It would be most appreciated, but you are under no obligation to do so.
 
