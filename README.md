@@ -31,8 +31,10 @@ can make a donation via either:
   [<img src="paypal.png" width="210" height="40" style="vertical-align:middle">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
 * <div style="vertical-align: middle;">[GitHub Sponsors](https://github.com/sponsors/richfromm) [<img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40">](https://github.com/sponsors/richfromm)</div>
 * <div style="vertical-align: middle;">[PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD) [<img src="paypal.svg" width="auto" height="40" style="vertical-align: middle;">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)</div>
-
-* <div display="flex" align-items
+* <div style="vertical-align: middle;">[GitHub Sponsors](https://github.com/sponsors/richfromm) [<img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40">](https://github.com/sponsors/richfromm)</div>
+* <div style="vertical-align: middle;">[PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD) [<img src="paypal.svg" width="auto" height="40" style="vertical-align: middle;">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)</div>
+* <div style="vertical-align: middle; margin: 10 0;"><a href="https://github.com/sponsors/richfromm">GitHub Sponsors</a><a href="https://github.com/sponsors/richfromm"><img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40" style="vertical-align: middle; margin: 0 10;"></div>
+* <div style="vertical-align: middle; margin: 10 0;"><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD">PayPal</a><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD"><img src="paypal.svg" width="auto" height="40" style="vertical-align: middle; margin: 0 10;"></a></div>
 
 It would be most appreciated, but you are under no obligation to do so.
 
