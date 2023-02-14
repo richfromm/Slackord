@@ -60,6 +60,10 @@ img {vertical-align: middle; margin: 0 10;}
 * [GitHub Sponsors](https://github.com/sponsors/richfromm)<a href="https://github.com/sponsors/richfromm"><img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40" valign="middle" hspace="10">
 * [PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)<a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD"><img src="paypal.svg" width="auto" height="40" valign="middle" hspace="10"></a>
 
+* [GitHub Sponsors](https://github.com/sponsors/richfromm)[<img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40" valign="middle" hspace="10">](https://github.com/sponsors/richfromm)
+* [PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)[<img src="paypal.svg" width="auto" height="40" valign="middle" hspace="10">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
+
+
 It would be most appreciated, but you are under no obligation to do so.
 
 ## History
