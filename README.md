@@ -35,7 +35,8 @@ can make a donation via either:
 * <div style="vertical-align: middle;">[PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD) [<img src="paypal.svg" width="auto" height="40" style="vertical-align: middle;">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)</div>
 * <div style="vertical-align: middle; margin: 10 0;"><a href="https://github.com/sponsors/richfromm">GitHub Sponsors</a><a href="https://github.com/sponsors/richfromm"><img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40" style="vertical-align: middle; margin: 0 10;"></div>
 * <div style="vertical-align: middle; margin: 10 0;"><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD">PayPal</a><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD"><img src="paypal.svg" width="auto" height="40" style="vertical-align: middle; margin: 0 10;"></a></div>
-<style type="text/css">
+<style
+  type="text/css">
 div {vertical-align: middle; margin: 10 0;}
 img {vertical-align: middle; margin: 0 10;}
 </style>
