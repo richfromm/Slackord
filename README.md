@@ -29,6 +29,12 @@ for threads. But then my list of additional proposed
 significant enough, that we mutually decided that me continuing
 development on a hard fork would be better.
 
+By now the code has changed enough, and even uses a totally different
+approach for communicating with Discord, that there's probably very
+little of the original codebase remaining. Nevertheless, I owe
+inspiration to the original, and it helped me significantly in getting
+started on this effort.
+
 Note that there also exists a .NET version
 [thomasloupe/Slackord2](https://github.com/thomasloupe/Slackord2) by the
 original author, that contains additional functionality and appears to be more
@@ -294,12 +300,12 @@ a `.py` suffix included in the package name_)
 
 ## External docs
 
-* [Slack: How to read Slack data exports](https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports)
-* [Slack: Reference: Message payloads](https://api.slack.com/reference/messaging/payload)
-* [Slack: Formatting text for app surfaces](https://api.slack.com/reference/surfaces/formatting)
-* [discord.py: API Reference](https://discordpy.readthedocs.io/en/latest/api.html)
-* [Markdown Guide: Slack](https://www.markdownguide.org/tools/slack/)
-* [Markdown Guide: Discord](https://www.markdownguide.org/tools/discord/)
+* [Slack: How to read Slack data exports]
+* [Slack: Reference: Message payloads]
+* [Slack: Formatting text for app surfaces]
+* [discord.py: API Reference]
+* [Markdown Guide: Slack]
+* [Markdown Guide: Discord]
 
 ## Future work
 
@@ -316,5 +322,14 @@ Some items I am considering:
     * Stream file downloads in chunks via
       [`Response.iter_content`](https://requests.readthedocs.io/en/latest/api/#requests.Response.iter_content)
 
-Feel free to open issues in GitHub if there are any other features you
-would like to see.
+Feel free to open [issues](https://github.com/richfromm/slack2discord/issues)
+in GitHub if there are any other features you would like to see.
+
+<!-- References links -->
+
+[Slack: How to read Slack data exports]: https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports
+[Slack: Reference: Message payloads]: https://api.slack.com/reference/messaging/payload
+[Slack: Formatting text for app surfaces]: https://api.slack.com/reference/surfaces/formatting
+[discord.py: API Reference]: https://discordpy.readthedocs.io/en/latest/api.html
+[Markdown Guide: Slack]: https://www.markdownguide.org/tools/slack/
+[Markdown Guide: Discord]: https://www.markdownguide.org/tools/discord/

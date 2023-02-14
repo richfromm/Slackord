@@ -15,6 +15,7 @@
     * This can occur if a file is deleted from Slack after the export, and
       before running this script to perfom the Discord import
 * Allow for re-use of downloaded files
+  ([issue#26](https://github.com/richfromm/slack2discord/issues/26))
     * Previously, even if you specified an existing directory with
       `--downloads-dir`, the file would always be freshly downloaded.
     * Now, if using the option, the existing file will be re-used, as long as
