@@ -7,6 +7,16 @@ Discord channel(s).
 
 See [Script invocation](#script-invocation) below.
 
+## Donations
+
+If you find this software useful and would like to make a financial
+contribution, you can make a donation via either:
+
+* [GitHub Sponsors](https://github.com/sponsors/richfromm)[<img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="32" valign="middle" hspace="10" alt="GitHub Sponsors">](https://github.com/sponsors/richfromm)
+* [PayPal](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)[<img src="paypal.svg" width="auto" height="32" valign="middle" hspace="10" alt="donate with PayPal">](https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD)
+
+It would be most appreciated, but you are under no obligation to do so.
+
 ## History
 
 This started out as

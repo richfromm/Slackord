@@ -2,6 +2,22 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
+### 2.6
+
+* During parsing, skip any attached files that have been deleted
+* Add `--ignore-file-not-found` option to ignore any attached files that can't
+  be found when downloading files
+    * The default is to raise an exception
+    * This can occur if a file is deleted from Slack after the export, and
+      before running this script to perfom the Discord import
+* Allow for re-use of downloaded files
+    * Previously, even if you specified an existing directory with
+      `--downloads-dir`, the file would always be freshly downloaded.
+    * Now, if using the option, the existing file will be re-used, as long as
+      a file exists with the same name, and the file size matches the
+      `Content-Length` HTTP response header.
+    * Also wrap the downloads in a progress bar with tqdm
+
 ### 2.5
 
 * Add support for files attached to messages
