@@ -140,7 +140,8 @@ class SlackDownloader():
             # All other HTTP errors raise an exception and fail.
             if resp.status_code == codes.not_found:
                 if ignore_not_found:
-                    logger.warning(f"Not found error returned fetching {url} to {filename}, ignoring.")
+                    logger.warning(
+                        f"Not found error returned fetching {url} to {filename}, ignoring.")
                     return False
                 logger.error(f"Not found error returned fetching {url} to {filename}."
                              ' You can ignore all of these with "--ignore-file-not-found".')

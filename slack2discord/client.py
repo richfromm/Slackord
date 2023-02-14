@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 DiscordChannelMap = NewType('DiscordChannelMap', dict[str, Optional[discord.TextChannel]])
 
 
-# template copied from https://github.com/Rapptz/discord.py/blob/master/examples/background_task_asyncio.py
+# template copied from
+# https://github.com/Rapptz/discord.py/blob/master/examples/background_task_asyncio.py
 class DiscordClient(discord.Client):
     """
     A Discord client for the purposes of importing the content of messages exported from Slack
@@ -82,7 +83,8 @@ class DiscordClient(discord.Client):
         """
         super().run(self.token)
 
-    # Different signature from superclass get_guild(id: int) and therefore different name to not collide
+    # Different signature from superclass get_guild(id: int)
+    # and therefore different name to not collide
     def get_guild_maybe_by_name(self, guild_name: Optional[str] = None) -> discord.Guild:
         """
         Get the appropriate guild (aka server).
@@ -181,12 +183,14 @@ class DiscordClient(discord.Client):
 
             # This requires the "Manage Channels" permission
             # https://discordpy.readthedocs.io/en/latest/api.html#discord.Guild.create_text_channel
-            channel = await guild.create_text_channel(channel_name, category=text_channels_category)
+            channel = await guild.create_text_channel(
+                channel_name, category=text_channels_category)
             assert channel.name == channel_name, f"New channel has unexpected name: {channel.name}"
 
         return channel
 
-    # Different signature from superclass get_channel(id: int) and therefore different name to not collide
+    # Different signature from superclass get_channel(id: int)
+    # and therefore different name to not collide
     async def get_channel_by_name(
             self,
             guild: discord.Guild,
@@ -211,7 +215,8 @@ class DiscordClient(discord.Client):
                     if channel.name == channel_name]
         if not channels:
             if not create:
-                error_msg = f"Unable to find Discord channel {channel_name}, use --create to auto create"
+                error_msg = f"Unable to find Discord channel {channel_name}," \
+                    + " use --create to auto create"
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
 
@@ -253,8 +258,9 @@ class DiscordClient(discord.Client):
 
         guild = self.get_guild_maybe_by_name(self.server_name)
 
-        # limit search to text channels, b/c the import doesn't support voice
-        # use guild.text_channels rather than self.get_all_channels() to avoid an unnecessary API call
+        # limit search to text channels, b/c the import doesn't support voice.
+        # use guild.text_channels rather than self.get_all_channels()
+        # to avoid an unnecessary API call.
         logger.info("All text channels on Discord server:"
                     f" {[channel.name for channel in guild.text_channels]}")
 
@@ -348,9 +354,11 @@ class DiscordClient(discord.Client):
         logger.info(f"Done posting messages to Discord channel {channel}")
 
     # mypy is confused and thinks there should be a self parameter in the decorator declaration
-    #    slack2discord/client.py:352: error: Self argument missing for a non-static method (or an invalid type for self)
+    #    slack2discord/client.py:352: error: Self argument missing for a non-static method
+    #        (or an invalid type for self)
     # not sure if this is a mypy bug, there is this issue, although it claims to be fixed:
-    #    https://github.com/python/mypy/issues/7778 : decorator as class member raises "self-argument missing"
+    #    https://github.com/python/mypy/issues/7778
+    #        decorator as class member raises "self-argument missing"
     @decorator
     async def discord_retry(  # type: ignore[misc]
             coro: Callable,
@@ -381,7 +389,8 @@ class DiscordClient(discord.Client):
         The comment at the end of the decorator line is to suppress errors like the following
         when running the mypy static type checker:
 
-            slack2discord/client.py:371: error: Unexpected keyword argument "desc" for "discord_retry" of "DiscordClient"
+            slack2discord/client.py:371: error:
+                Unexpected keyword argument "desc" for "discord_retry" of "DiscordClient"
 
         mypy is confused by our use of parametrized decorator via the decorator module (see
         https://github.com/micheles/decorator/blob/master/docs/documentation.md#decorator-factories),
@@ -421,14 +430,16 @@ class DiscordClient(discord.Client):
                     retry_sec = retry_backoff[retry_idx]
 
                 logger.warning(f"{exc_msg} {desc}: {e}")
-                logger.info(f"Will retry #{retry_count} after {retry_sec} seconds, press Ctrl-C to abort")
+                logger.info(
+                    f"Will retry #{retry_count} after {retry_sec} seconds, press Ctrl-C to abort")
                 await asyncio.sleep(retry_sec)
 
     @discord_retry(desc="sending message to channel")  # type: ignore[call-arg]
     async def send_msg_to_channel(
             self,
             channel: discord.TextChannel,
-            send_kwargs: dict[str, Union[str, Optional[list[discord.Embed]]]]) -> Optional[discord.Message]:
+            send_kwargs: dict[str, Union[str, Optional[list[discord.Embed]]]]
+    ) -> Optional[discord.Message]:
         """
         Send a single message to a channel
 
@@ -464,7 +475,8 @@ class DiscordClient(discord.Client):
     async def send_msg_to_thread(
             self,
             thread: discord.Thread,
-            send_kwargs: dict[str, Union[str, Optional[list[discord.Embed]]]]) -> Optional[discord.Message]:
+            send_kwargs: dict[str, Union[str, Optional[list[discord.Embed]]]]
+    ) -> Optional[discord.Message]:
         """
         Send a single message to a thread
 

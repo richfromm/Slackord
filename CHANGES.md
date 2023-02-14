@@ -5,6 +5,7 @@
 ### 2.7 (in progress)
 
 * Add mypy typing hints
+* Add flake8 style checks
 
 ### 2.6
 

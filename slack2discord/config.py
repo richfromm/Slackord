@@ -121,8 +121,8 @@ def check_config(config: Namespace) -> None:
 
     ways = int(one_file) + int(one_channel) + int(multi_channels)
     if ways > 1:
-        exit_usage("--src-file (one file), --src-dir (one channel), --src-dirtree (multiple channels)"
-                   " are all mutually exclusive")
+        exit_usage("--src-file (one file), --src-dir (one channel), --src-dirtree"
+                   " (multiple channels) are all mutually exclusive")
     if ways == 0:
         exit_usage("One (and only one) of --src-file (one file), --src-dir (one channel), or"
                    " --src-dirtree (multiple channels) is required")
@@ -167,8 +167,9 @@ def get_config(argv: list[str]) -> Namespace:
     parser.add_argument('--create',
                         required=False,
                         action='store_true',
-                        help="Optionally create any destination Discord text channel if it does not"
-                        " exist. Default behavior is to fail if destination channel is missing.")
+                        help="Optionally create any destination Discord text channel if it does"
+                        " not exist. Default behavior is to fail if destination channel is"
+                        " missing.")
 
     parser.add_argument('--src-file',
                         required=False,

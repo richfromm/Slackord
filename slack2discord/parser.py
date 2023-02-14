@@ -75,7 +75,8 @@ class SlackParser():
 
         if users_file:
             if not exists(users_file):
-                logger.warn(f"users file is not specified, unable to find a users file at our guess: {users_file}")
+                logger.warn("users file is not specified,"
+                            f" unable to find a users file at our guess: {users_file}")
                 users_file = None
 
         if users_file:
@@ -117,7 +118,8 @@ class SlackParser():
         Given a timestamp, name, and message from slack,
         format it into a message to post to discord
         """
-        # if the message spans multiple lines, output it starting on a separate line from the header
+        # if the message spans multiple lines,
+        # output it starting on a separate line from the header
         if message.find('\n') != -1:
             message_sep = '\n'
         else:
@@ -215,7 +217,8 @@ class SlackParser():
         Does not return anything, the results populate the class member self.users
         """
         if not self.users_file:
-            logger.warn("No users file specified or deduced, will get user info from individual messages")
+            logger.warn(
+                "No users file specified or deduced, will get user info from individual messages")
             return
 
         logger.info(f"Parsing user information from {self.users_file}")
@@ -229,7 +232,8 @@ class SlackParser():
                 user_id = user['id']
                 if user_id in self.users:
                     # I don't think this ought to happen
-                    logger.warn(f"Duplicate Slack user ID found, will ignore repeated instances: {user_id}")
+                    logger.warn("Duplicate Slack user ID found,"
+                                f" will ignore repeated instances: {user_id}")
                     continue
 
                 if 'name' in user:
@@ -431,7 +435,8 @@ class SlackParser():
             if self.src_dirtree:
                 channel_dir = join(self.src_dirtree, slack_channel)
             else:
-                assert self.src_dir, f"No slack source dir tree or source dir is set for slack channel {slack_channel}"
+                assert self.src_dir, "No slack source dir tree or source dir is set for" \
+                    f" slack channel {slack_channel}"
                 channel_dir = self.src_dir
 
             # these are the basename's only (not including the dir)
@@ -553,16 +558,17 @@ class SlackParser():
         if 'replies' in message:
             # this is the head of a thread
             empty_thread_dict: ThreadType = cast(ThreadType, dict())
-            channel_msgs_dict[timestamp] = cast(RootPlusThreadType, (parsed_message, empty_thread_dict))
+            channel_msgs_dict[timestamp] = cast(
+                RootPlusThreadType, (parsed_message, empty_thread_dict))
         elif 'thread_ts' in message:
             # this is within a thread
             # in general, values in the JSON could be lists or dicts, but in this case we know it's
             # a string representing a float
             thread_timestamp = float(cast(str, message['thread_ts']))
             if thread_timestamp not in channel_msgs_dict:
-                # can't find the root of the thread to which this message belongs
-                # ideally this shouldn't happen
-                # but it could if you have a long enough message history not captured in the exported file
+                # can't find the root of the thread to which this message belongs.
+                # ideally this shouldn't happen, but it could
+                # if you have a long enough message history not captured in the exported file.
                 logger.warning(f"Can't find thread with timestamp {thread_timestamp} for"
                                f" message with timestamp {timestamp}, creating"
                                " synthetic thread")
@@ -570,7 +576,8 @@ class SlackParser():
                     thread_timestamp, None, '_Unable to find start of exported thread_')
                 fake_message = ParsedMessage(fake_message_text)
                 empty_fake_thread_dict: ThreadType = cast(ThreadType, dict())
-                channel_msgs_dict[thread_timestamp] = cast(RootPlusThreadType, (fake_message, empty_fake_thread_dict))
+                channel_msgs_dict[thread_timestamp] = cast(
+                    RootPlusThreadType, (fake_message, empty_fake_thread_dict))
 
             # add to the dict either for the existing thread
             # or the fake thread that we created above
