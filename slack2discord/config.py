@@ -4,7 +4,6 @@ from os import environ
 from os.path import dirname, isfile, join
 from sys import argv, exit
 from textwrap import dedent
-from typing import Optional
 
 
 logger = logging.getLogger(__name__)
@@ -65,7 +64,8 @@ EPILOG: str = dedent(
         https://slack.com/help/articles/201658943-Export-your-workspace-data
     """)
 
-def exit_usage (msg: str) -> None:
+
+def exit_usage(msg: str) -> None:
     """
     Exit with a specific error message, plus the usage, if the specific config is not legal.
     """
@@ -125,7 +125,7 @@ def check_config(config: Namespace) -> None:
                    " are all mutually exclusive")
     if ways == 0:
         exit_usage("One (and only one) of --src-file (one file), --src-dir (one channel), or"
-                    "--src-dirtree (multiple channels) is required")
+                   " --src-dirtree (multiple channels) is required")
 
     if one_file and config.dest_channel is None:
         exit_usage("--dest-channel is required with --src-file (one file)")

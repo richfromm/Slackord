@@ -43,6 +43,12 @@ originates.
 
 ## Prereqs
 
+### py3
+
+This assumes Python 3.x. (Actually, currently 3.9+, see mypy notes below.)
+Python 2.x was EOL'd at the beginning of 2020, and no new project should be
+using it.
+
 ### virtualenv
 
 Install the required packages into a Python virtualenv via:
@@ -69,10 +75,15 @@ This will allow you to run
 
     mypy slack2discord.py
 
-### py3
+I'm using the lower case typing notation for collections (which also removes
+the need for an import), which requires Python 3.9+ . In the future I may
+switch to using the `|` operator rather than `Union`, which would require
+Python 3.10+ .
 
-This assumes Python 3.0. Python 2.x was EOL'd at the beginning of
-2020, and no new project should be using it.
+Additionally you can run [flake8](https://flake8.pycqa.org/en/latest/) style
+checks:
+
+    flake8 slack2discord.py slack2discord
 
 ## Usage
 

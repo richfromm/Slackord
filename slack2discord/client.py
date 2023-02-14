@@ -7,7 +7,6 @@ from typing import cast, Callable, NewType, Optional, Union, Sequence
 
 import discord
 
-from .message import ParsedMessage
 from .parser import MessagesAllChannelsType, MessagesPerChannelType
 
 
@@ -230,7 +229,7 @@ class DiscordClient(discord.Client):
 
         # skip this if there is no channel and it's a dry run, which only makes sense in the
         # created channel case
-        if not(channel is None and create and dry_run):
+        if not (channel is None and create and dry_run):
             # b/c we limited the search to guild.text_channels above
             assert isinstance(channel, discord.TextChannel), (
                 f"Discord channel {channel} is NOT a TextChannel. This should not happen.")
@@ -279,7 +278,7 @@ class DiscordClient(discord.Client):
         """
         logger.info("Waiting until ready")
         await self.wait_until_ready()
-        logger.info(f"Ready. Begin posting all messages to all Discord channels.")
+        logger.info("Ready. Begin posting all messages to all Discord channels.")
         if self.verbose:
             # This has the potential to be VERY verbose
             pprint(self.parsed_messages)

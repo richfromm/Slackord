@@ -4,7 +4,6 @@
 # Enough chaanges led to a hard fork, it is now slack2discord, by Rich Fromm
 
 from argparse import Namespace
-import asyncio
 import logging
 from sys import argv, exit
 

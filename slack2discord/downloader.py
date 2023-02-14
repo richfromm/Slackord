@@ -188,10 +188,10 @@ class SlackDownloader():
                 local_size = getsize(file.local_filename)
                 remote_size = self._getsize_remote(file.url)
                 if remote_size and (local_size == remote_size):
-                   logger.debug(f"Skipping URL {file.url} which is covered by already existing"
-                                f" {local_size} byte local file {file.local_filename}")
-                   skipped += 1
-                   continue
+                    logger.debug(f"Skipping URL {file.url} which is covered by already existing"
+                                 f" {local_size} byte local file {file.local_filename}")
+                    skipped += 1
+                    continue
 
             if self._wget(file.url, file.local_filename, self.ignore_not_found):
                 success += 1

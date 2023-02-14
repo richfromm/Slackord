@@ -540,11 +540,12 @@ class SlackParser():
                     # File was deleted from Slack, just log this,
                     # don't bother mentioning this state in the Discord import.
                     if 'date_deleted' in file:
-                        logger.warning("Attached file was deleted at"
+                        logger.warning(
+                            "Attached file was deleted at"
                             f" {SlackParser.format_time(cast(int, file['date_deleted']))}."
                             " Ignoring.")
                     else:
-                        logger.warning(f"Attached file was deleted. Ignoring.")
+                        logger.warning("Attached file was deleted. Ignoring.")
                 else:
                     # Normal attached file case
                     parsed_message.add_file(cast(dict[str, Any], file))
