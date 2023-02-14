@@ -51,6 +51,12 @@ img {vertical-align: middle; margin: 0 10;}
 <li><div><a href="https://github.com/sponsors/richfromm">GitHub Sponsors</a><a href="https://github.com/sponsors/richfromm"><img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40"></div></li>
 <li><div><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD">PayPal</a><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD"><img src="paypal.svg" width="auto" height="40"></a></div></li>
 
+* <a href="https://github.com/sponsors/richfromm">GitHub Sponsors </a><a href="https://github.com/sponsors/richfromm"><img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40" valign="middle">
+* <a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD">PayPal </a><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD"><img src="paypal.svg" width="auto" height="40" valign="middle"></a>
+
+* <a href="https://github.com/sponsors/richfromm">GitHub Sponsors</a><a href="https://github.com/sponsors/richfromm"><img src="https://github.githubassets.com/pinned-octocat.svg" width="auto" height="40" valign="middle" hspace="10">
+* <a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD">PayPal</a><a href="https://www.paypal.com/donate/?business=J46TL293CQ2M2&no_recurring=0&currency_code=USD"><img src="paypal.svg" width="auto" height="40" valign="middle" hspace="10"></a>
+
 It would be most appreciated, but you are under no obligation to do so.
 
 ## History
