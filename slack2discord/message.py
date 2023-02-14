@@ -181,14 +181,16 @@ class MessageLink():
 
     Slack calls a link an 'attachment', Discord calls it an 'Embed'
     """
-    def __init__(self,
-                 title: Optional[str] = None,
-                 title_link: Optional[str] = None,
-                 text: Optional[str] = None,
-                 service_name: Optional[str] = None,
-                 service_icon: Optional[str] = None,
-                 image_url: Optional[str] = None,
-                 thumb_url: Optional[str] = None) -> None:
+    def __init__(
+            self,
+            title: Optional[str] = None,
+            title_link: Optional[str] = None,
+            text: Optional[str] = None,
+            service_name: Optional[str] = None,
+            service_icon: Optional[str] = None,
+            image_url: Optional[str] = None,
+            thumb_url: Optional[str] = None
+    ) -> None:
         # these are all based on Slack terminology
         self.title = title
         self.title_link = title_link

@@ -33,7 +33,8 @@ class DiscordClient(discord.Client):
             create_channels: bool = False,
             verbose: bool = False,
             dry_run: bool = False,
-            **kwargs) -> None:
+            **kwargs
+    ) -> None:
         self.token: str = token
 
         # see SlackParser.parse() for details
@@ -127,7 +128,8 @@ class DiscordClient(discord.Client):
     def get_category(
             self,
             guild: discord.Guild,
-            category_name: str) -> Optional[discord.CategoryChannel]:
+            category_name: str
+    ) -> Optional[discord.CategoryChannel]:
         """
         Get the category with the specified name.
 
@@ -158,7 +160,8 @@ class DiscordClient(discord.Client):
             self,
             guild: discord.Guild,
             channel_name: str,
-            dry_run: bool = False) -> Optional[discord.TextChannel]:
+            dry_run: bool = False
+    ) -> Optional[discord.TextChannel]:
         """
         Create a new text channel with the specified name.
 
@@ -196,7 +199,8 @@ class DiscordClient(discord.Client):
             guild: discord.Guild,
             channel_name: str,
             create: bool = False,
-            dry_run: bool = False) -> Optional[discord.TextChannel]:
+            dry_run: bool = False
+    ) -> Optional[discord.TextChannel]:
         """
         Get the channel with the specified name.
 
@@ -313,7 +317,8 @@ class DiscordClient(discord.Client):
     async def post_messages_to_channel(
             self,
             channel: Optional[discord.TextChannel],
-            channel_msgs_dict: MessagesPerChannelType) -> None:
+            channel_msgs_dict: MessagesPerChannelType
+    ) -> None:
         """
         This posts all of the messages of the previously parsed JSON files from a Slack export
         to a single channel.
@@ -364,7 +369,8 @@ class DiscordClient(discord.Client):
             coro: Callable,
             desc: str = "making discord HTTP API call",
             *args,
-            **kwargs) -> None:
+            **kwargs
+    ) -> None:
         """
         Wrapper around a Discord API call, with retry
 
@@ -458,7 +464,8 @@ class DiscordClient(discord.Client):
     async def create_thread(
             self,
             root_message: discord.Message,
-            thread_name: str) -> Optional[discord.Thread]:
+            thread_name: str
+    ) -> Optional[discord.Thread]:
         """
         Create a thread rooted at the given message, with the given name.
 
@@ -495,7 +502,8 @@ class DiscordClient(discord.Client):
     async def add_files_to_message(
             self,
             message: discord.Message,
-            add_files_args: list[discord.File]) -> Optional[discord.Message]:
+            add_files_args: list[discord.File]
+    ) -> Optional[discord.Message]:
         """
         Add files to a message by uploading as attachments
 

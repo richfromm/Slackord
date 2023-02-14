@@ -45,14 +45,16 @@ class SlackParser():
     A parser for exported files from Slack
     to interpret the content of messages to post to Discord
     """
-    def __init__(self,
-                 src_file: Optional[str] = None,
-                 src_dir: Optional[str] = None,
-                 dest_channel: Optional[str] = None,
-                 src_dirtree: Optional[str] = None,
-                 channel_file: Optional[str] = None,
-                 users_file: Optional[str] = None,
-                 verbose: bool = False) -> None:
+    def __init__(
+            self,
+            src_file: Optional[str] = None,
+            src_dir: Optional[str] = None,
+            dest_channel: Optional[str] = None,
+            src_dirtree: Optional[str] = None,
+            channel_file: Optional[str] = None,
+            users_file: Optional[str] = None,
+            verbose: bool = False
+    ) -> None:
         # These are from the config, some will be None
         self.src_file = src_file
         # canonicalize path to properly infer channel name in non-obvious situations, e.g. dir ends

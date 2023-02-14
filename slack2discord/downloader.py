@@ -22,10 +22,12 @@ class SlackDownloader():
     Files not found by default raise an error.
     This behavior can be overridden and they can be ignored with ignore_not_found.
     """
-    def __init__(self,
-                 parsed_messages: MessagesAllChannelsType,
-                 downloads_dir: Optional[str] = None,
-                 ignore_not_found: bool = False) -> None:
+    def __init__(
+            self,
+            parsed_messages: MessagesAllChannelsType,
+            downloads_dir: Optional[str] = None,
+            ignore_not_found: bool = False
+    ) -> None:
         # see SlackParser.parse() for details
         self.parsed_messages: MessagesAllChannelsType = parsed_messages
 
@@ -106,10 +108,12 @@ class SlackDownloader():
 
             return int(size)
 
-    def _wget(self,
-              url: str,
-              filename: str,
-              ignore_not_found: bool = False) -> bool:
+    def _wget(
+            self,
+            url: str,
+            filename: str,
+            ignore_not_found: bool = False
+    ) -> bool:
         """
         Fetch a file via HTTP GET from the given URL, and store it in the local filename.
 
