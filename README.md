@@ -39,26 +39,9 @@ originates.
 
 ### virtualenv
 
-Install the following packages into a Python virtualenv:
+Install the required packages into a Python virtualenv via:
 
-* `discord.py` ([docs](https://discordpy.readthedocs.io/en/latest/),
-[pypi](https://pypi.org/project/discord.py/),
-[source](https://github.com/Rapptz/discord.py)) (_yes, there really is
-a `.py` suffix included in the package name_)
-* `decorator`
-([docs](https://github.com/micheles/decorator/blob/master/docs/documentation.md),
-[pypi](https://pypi.org/project/decorator/),
-[source](https://github.com/micheles/decorator))
-* `requests` ([docs](https://requests.readthedocs.io/en/latest/),
-[pypi](https://pypi.org/project/requests/),
-[source](https://github.com/psf/requests))
-* `tqdm` ([docs](https://tqdm.github.io/),
-[pypi](https://pypi.org/project/tqdm/),
-[source](https://github.com/tqdm/tqdm))
-
-via:
-
-    pip install discord.py decorator requests tqdm
+    pip install -r requirements.txt
 
 For help creating virtual environments, see the
 [venv](https://docs.python.org/3/library/venv.html) docs. If you use Python a
@@ -66,6 +49,19 @@ lot, you may also want to consider
 [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/). If you
 don't want to think much about virtual envs and just want simple Python scripts
 to work, you could consider [pyv](https://github.com/richfromm/pyv).
+
+#### Development
+
+If you want to work on development of this library, you should
+**additionally** install the required dev packages into your
+virtualenv:
+
+    pip install -r requirements-dev.txt
+
+This will allow you to run
+[mypy](https://mypy.readthedocs.io/en/stable/) static typing checks:
+
+    mypy slack2discord.py
 
 ### py3
 
@@ -277,6 +273,25 @@ reason about errors (and potentially restart a failed script, although no such
 restart support is currently included) if only one channel was imported at a
 time.
 
+## Libraries
+
+This code uses the following libraries:
+
+* `discord.py` ([docs](https://discordpy.readthedocs.io/en/latest/),
+[pypi](https://pypi.org/project/discord.py/),
+[source](https://github.com/Rapptz/discord.py)) (_yes, there really is
+a `.py` suffix included in the package name_)
+* `decorator`
+([docs](https://github.com/micheles/decorator/blob/master/docs/documentation.md),
+[pypi](https://pypi.org/project/decorator/),
+[source](https://github.com/micheles/decorator))
+* `requests` ([docs](https://requests.readthedocs.io/en/latest/),
+[pypi](https://pypi.org/project/requests/),
+[source](https://github.com/psf/requests))
+* `tqdm` ([docs](https://tqdm.github.io/),
+[pypi](https://pypi.org/project/tqdm/),
+[source](https://github.com/tqdm/tqdm))
+
 ## External docs
 
 * [Slack: How to read Slack data exports](https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports)
@@ -292,8 +307,6 @@ Some items I am considering:
 
 * Better error reporting, so that if an entire import is not
   successful, it is easier to resume in a way as to avoid duplicates.
-
-* Add mypy type hints
 
 * Add unit tests
 

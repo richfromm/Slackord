@@ -1,0 +1,4 @@
+mypy
+types-decorator
+types-requests
+tqdm-stubs
