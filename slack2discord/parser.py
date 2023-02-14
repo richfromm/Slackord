@@ -104,7 +104,7 @@ class SlackParser():
 
         In practice, these should be of the form YYYY-MM-DD.json
         """
-        return match('\A\d\d\d\d-\d\d-\d\d.json\Z', basename(filename))
+        return match(r'\A\d\d\d\d-\d\d-\d\d.json\Z', basename(filename))
 
     @staticmethod
     def format_time(timestamp: Union[int, float]) -> str:
@@ -135,7 +135,8 @@ class SlackParser():
     @staticmethod
     def unescape_url(url: Optional[str]) -> Optional[str]:
         """
-        The Slack export escapes all slashes (/) in URL's with a backslash (\/). Undo this.
+        The Slack export escapes all slashes (/) in URL's with a backslash (\/).  # noqa: W605
+        Undo this.
 
         Return the unescaped string.
         """
@@ -147,7 +148,7 @@ class SlackParser():
         # hence the triple backslash here.
         #
         # This will perform multiple substitutions, across multiple lines, if needed.
-        return sub('\\\/', '/', url)
+        return sub(r'\\\/', '/', url)
 
     @staticmethod
     def unescape_text(text: Optional[str]) -> Optional[str]:
@@ -197,13 +198,13 @@ class SlackParser():
 
         # The asterisk for bold needs to be escaped in the regex, b/c otherwise it means "0 or
         # more". It does *not* need to be escaped in the substitution string.
-        SLACK_BOLD_RE = "(\*)(\S+|\S.*\S)(\*)"
+        SLACK_BOLD_RE = r"(\*)(\S+|\S.*\S)(\*)"
         DISCORD_BOLD_SUB = r"\1*\2*\3"
         text_bold_fixed = sub(
             SLACK_BOLD_RE, DISCORD_BOLD_SUB, text)
 
         # A tilde for strikethrough is not a regex special char, so needs no escaping.
-        SLACK_STRIKETHROUGH_RE = "(~)(\S+|\S.*\S)(~)"
+        SLACK_STRIKETHROUGH_RE = r"(~)(\S+|\S.*\S)(~)"
         DISCORD_STRIKETHROUGH_SUB = r"\1~\2~\3"
         text_bold_and_strikethrough_fixed = sub(
             SLACK_STRIKETHROUGH_RE, DISCORD_STRIKETHROUGH_SUB, text_bold_fixed)
