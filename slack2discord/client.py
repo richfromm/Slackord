@@ -212,7 +212,7 @@ class DiscordClient(discord.Client):
         If the create option is not selected, and the channel does not exist, raise a RuntimeError.
 
         In the dry run creation case, return None.
-        Optional is needed for the retury type b/c of the dry run case.
+        Optional is needed for the return type b/c of the dry run case.
         """
         channels = [channel
                     for channel in guild.text_channels
