@@ -147,14 +147,6 @@ def get_config(argv: list[str]) -> Namespace:
     Parse args and return the config.
     """
 
-    # flake8 test
-    logging.debug("This is a really long line in a file one level down so that flake8 fails and we can test that it's caught.")
-    logging.debug("This line would fail in the default config, but should pass with our config.")
-    # mypy test
-    # flake8 also doesn't like that truth is assigned but not used
-    truth: bool = 42
-    # oh, and the line below has whitespace and should fail flake8 too
-    
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
                             description=DESCRIPTION, epilog=EPILOG, usage=USAGE)
 
