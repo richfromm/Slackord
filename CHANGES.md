@@ -2,10 +2,11 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
-### 2.7 (in progress)
+### 2.7
 
 * Add mypy typing hints
 * Add flake8 style checks
+* Configure GitHub to automatically run these checks
 
 ### 2.6
 
