@@ -24,6 +24,13 @@ if __name__ == '__main__':
     # So set it up manually.
     setup_logging(root=True)
 
+    # flake8 test
+    logging.debug("This is a really long line in the top level file so that flake8 fails and we can test that it's caught.")
+    logging.debug("This line would fail in the default config, but should pass with our config.")
+    # mypy test
+    truth: bool = 42
+    # oh, and the line below has whitespace and should fail flake8 too
+    
     config: Namespace = get_config(argv)
     if config.verbose:
         logger.info("Verbose output enabled, setting log level to DEBUG")
