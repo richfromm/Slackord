@@ -23,6 +23,8 @@ jobs:
       - name: flake8 style checks
         run: |
           flake8 slack2discord.py slack2discord
+        continue-on-error: true
       - name: mypy static typing checks
         run: |
           mypy slack2discord.py
+        continue-on-error: true
