@@ -62,29 +62,6 @@ lot, you may also want to consider
 don't want to think much about virtual envs and just want simple Python scripts
 to work, you could consider [pyv](https://github.com/richfromm/pyv).
 
-#### Development
-
-If you want to work on development of this library, you should
-**additionally** install the required dev packages into your
-virtualenv:
-
-    pip install -r requirements-dev.txt
-
-This will allow you to run
-[mypy](https://mypy.readthedocs.io/en/stable/) static typing checks:
-
-    mypy slack2discord.py
-
-I'm using the lower case typing notation for collections (which also removes
-the need for an import), which requires Python 3.9+ . In the future I may
-switch to using the `|` operator rather than `Union`, which would require
-Python 3.10+ .
-
-Additionally you can run [flake8](https://flake8.pycqa.org/en/latest/) style
-checks:
-
-    flake8 slack2discord.py slack2discord
-
 ## Usage
 
 ### Slack export
@@ -317,6 +294,35 @@ a `.py` suffix included in the package name_)
 * [discord.py: API Reference]
 * [Markdown Guide: Slack]
 * [Markdown Guide: Discord]
+
+## Development
+
+If you want to work on development of this library, besides the packages
+previously installed (see Prereqs above), you should **additionally** install
+the required dev packages into your virtualenv:
+
+    pip install -r requirements-dev.txt
+
+This will allow you to run
+[mypy](https://mypy.readthedocs.io/en/stable/) static typing checks:
+
+    mypy slack2discord.py
+
+I'm using the lower case typing notation for collections (which also removes
+the need for an import), which requires Python 3.9+ . In the future I may
+switch to using the `|` operator rather than `Union`, which would require
+Python 3.10+ .
+
+Additionally you can run [flake8](https://flake8.pycqa.org/en/latest/) style
+checks:
+
+    flake8 slack2discord.py slack2discord
+
+You can automatically run both checks with `./check.sh`. GitHub is configured
+(via `.github/workflows/check.yaml` and [GitHub
+Actions](https://docs.github.com/en/actions)) to automatically run these checks
+on any PRs, to require the checks to pass before merging to `master`, and to
+automatically run these checks for any pushes to `master`.
 
 ## Future work
 
