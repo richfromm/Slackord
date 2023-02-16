@@ -29,6 +29,12 @@ for threads. But then my list of additional proposed
 significant enough, that we mutually decided that me continuing
 development on a hard fork would be better.
 
+By now the code has changed enough, and even uses a totally different
+approach for communicating with Discord, that there's probably very
+little of the original codebase remaining. Nevertheless, I owe
+inspiration to the original, and it helped me significantly in getting
+started on this effort.
+
 Note that there also exists a .NET version
 [thomasloupe/Slackord2](https://github.com/thomasloupe/Slackord2) by the
 original author, that contains additional functionality and appears to be more
@@ -37,28 +43,17 @@ originates.
 
 ## Prereqs
 
+### py3
+
+This assumes Python 3.x. (Actually, currently 3.9+, see mypy notes below.)
+Python 2.x was EOL'd at the beginning of 2020, and no new project should be
+using it.
+
 ### virtualenv
 
-Install the following packages into a Python virtualenv:
+Install the required packages into a Python virtualenv via:
 
-* `discord.py` ([docs](https://discordpy.readthedocs.io/en/latest/),
-[pypi](https://pypi.org/project/discord.py/),
-[source](https://github.com/Rapptz/discord.py)) (_yes, there really is
-a `.py` suffix included in the package name_)
-* `decorator`
-([docs](https://github.com/micheles/decorator/blob/master/docs/documentation.md),
-[pypi](https://pypi.org/project/decorator/),
-[source](https://github.com/micheles/decorator))
-* `requests` ([docs](https://requests.readthedocs.io/en/latest/),
-[pypi](https://pypi.org/project/requests/),
-[source](https://github.com/psf/requests))
-* `tqdm` ([docs](https://tqdm.github.io/),
-[pypi](https://pypi.org/project/tqdm/),
-[source](https://github.com/tqdm/tqdm))
-
-via:
-
-    pip install discord.py decorator requests tqdm
+    pip install -r requirements.txt
 
 For help creating virtual environments, see the
 [venv](https://docs.python.org/3/library/venv.html) docs. If you use Python a
@@ -67,10 +62,28 @@ lot, you may also want to consider
 don't want to think much about virtual envs and just want simple Python scripts
 to work, you could consider [pyv](https://github.com/richfromm/pyv).
 
-### py3
+#### Development
 
-This assumes Python 3.0. Python 2.x was EOL'd at the beginning of
-2020, and no new project should be using it.
+If you want to work on development of this library, you should
+**additionally** install the required dev packages into your
+virtualenv:
+
+    pip install -r requirements-dev.txt
+
+This will allow you to run
+[mypy](https://mypy.readthedocs.io/en/stable/) static typing checks:
+
+    mypy slack2discord.py
+
+I'm using the lower case typing notation for collections (which also removes
+the need for an import), which requires Python 3.9+ . In the future I may
+switch to using the `|` operator rather than `Union`, which would require
+Python 3.10+ .
+
+Additionally you can run [flake8](https://flake8.pycqa.org/en/latest/) style
+checks:
+
+    flake8 slack2discord.py slack2discord
 
 ## Usage
 
@@ -277,14 +290,33 @@ reason about errors (and potentially restart a failed script, although no such
 restart support is currently included) if only one channel was imported at a
 time.
 
+## Libraries
+
+This code uses the following libraries:
+
+* `discord.py` ([docs](https://discordpy.readthedocs.io/en/latest/),
+[pypi](https://pypi.org/project/discord.py/),
+[source](https://github.com/Rapptz/discord.py)) (_yes, there really is
+a `.py` suffix included in the package name_)
+* `decorator`
+([docs](https://github.com/micheles/decorator/blob/master/docs/documentation.md),
+[pypi](https://pypi.org/project/decorator/),
+[source](https://github.com/micheles/decorator))
+* `requests` ([docs](https://requests.readthedocs.io/en/latest/),
+[pypi](https://pypi.org/project/requests/),
+[source](https://github.com/psf/requests))
+* `tqdm` ([docs](https://tqdm.github.io/),
+[pypi](https://pypi.org/project/tqdm/),
+[source](https://github.com/tqdm/tqdm))
+
 ## External docs
 
-* [Slack: How to read Slack data exports](https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports)
-* [Slack: Reference: Message payloads](https://api.slack.com/reference/messaging/payload)
-* [Slack: Formatting text for app surfaces](https://api.slack.com/reference/surfaces/formatting)
-* [discord.py: API Reference](https://discordpy.readthedocs.io/en/latest/api.html)
-* [Markdown Guide: Slack](https://www.markdownguide.org/tools/slack/)
-* [Markdown Guide: Discord](https://www.markdownguide.org/tools/discord/)
+* [Slack: How to read Slack data exports]
+* [Slack: Reference: Message payloads]
+* [Slack: Formatting text for app surfaces]
+* [discord.py: API Reference]
+* [Markdown Guide: Slack]
+* [Markdown Guide: Discord]
 
 ## Future work
 
@@ -292,8 +324,6 @@ Some items I am considering:
 
 * Better error reporting, so that if an entire import is not
   successful, it is easier to resume in a way as to avoid duplicates.
-
-* Add mypy type hints
 
 * Add unit tests
 
@@ -303,5 +333,14 @@ Some items I am considering:
     * Stream file downloads in chunks via
       [`Response.iter_content`](https://requests.readthedocs.io/en/latest/api/#requests.Response.iter_content)
 
-Feel free to open issues in GitHub if there are any other features you
-would like to see.
+Feel free to open [issues](https://github.com/richfromm/slack2discord/issues)
+in GitHub if there are any other features you would like to see.
+
+<!-- References links -->
+
+[Slack: How to read Slack data exports]: https://slack.com/help/articles/220556107-How-to-read-Slack-data-exports
+[Slack: Reference: Message payloads]: https://api.slack.com/reference/messaging/payload
+[Slack: Formatting text for app surfaces]: https://api.slack.com/reference/surfaces/formatting
+[discord.py: API Reference]: https://discordpy.readthedocs.io/en/latest/api.html
+[Markdown Guide: Slack]: https://www.markdownguide.org/tools/slack/
+[Markdown Guide: Discord]: https://www.markdownguide.org/tools/discord/

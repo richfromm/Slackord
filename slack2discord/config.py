@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 import logging
 from os import environ
 from os.path import dirname, isfile, join
@@ -9,12 +9,12 @@ from textwrap import dedent
 logger = logging.getLogger(__name__)
 
 
-DESCRIPTION = dedent(
+DESCRIPTION: str = dedent(
     """
     slack2discord parses data exported from Slack, and imports it to Discord.
     """)
 
-USAGE = dedent(
+USAGE: str = dedent(
     f"""
     {argv[0]} [--token TOKEN] [--server SERVER] [--create] \\
         [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] [--ignore-file-not-found] \\
@@ -54,7 +54,7 @@ USAGE = dedent(
     post to existing channels.
     """)
 
-EPILOG = dedent(
+EPILOG: str = dedent(
     """
     Prior to running this script, you must create a slack2discord application in your Discord and
     create a token at:
@@ -64,7 +64,8 @@ EPILOG = dedent(
         https://slack.com/help/articles/201658943-Export-your-workspace-data
     """)
 
-def exit_usage(msg):
+
+def exit_usage(msg: str) -> None:
     """
     Exit with a specific error message, plus the usage, if the specific config is not legal.
     """
@@ -73,7 +74,7 @@ def exit_usage(msg):
     exit(1)
 
 
-def get_token(config):
+def get_token(config: Namespace) -> None:
     """
     Ensure that we have a discord token
 
@@ -100,7 +101,7 @@ def get_token(config):
                " DISCORD_TOKEN env var, or .discord_token file in same dir as script")
 
 
-def check_config(config):
+def check_config(config: Namespace) -> None:
     """
     Check that the config is legal.
 
@@ -120,11 +121,11 @@ def check_config(config):
 
     ways = int(one_file) + int(one_channel) + int(multi_channels)
     if ways > 1:
-        exit_usage("--src-file (one file), --src-dir (one channel), --src-dirtree (multiple channels)"
-                   " are all mutually exclusive")
+        exit_usage("--src-file (one file), --src-dir (one channel), --src-dirtree"
+                   " (multiple channels) are all mutually exclusive")
     if ways == 0:
         exit_usage("One (and only one) of --src-file (one file), --src-dir (one channel), or"
-                    "--src-dirtree (multiple channels) is required")
+                   " --src-dirtree (multiple channels) is required")
 
     if one_file and config.dest_channel is None:
         exit_usage("--dest-channel is required with --src-file (one file)")
@@ -141,7 +142,7 @@ def check_config(config):
         exit_usage("Discord token is not set (cmd line arg, env var, or dot file)")
 
 
-def get_config(argv):
+def get_config(argv: list[str]) -> Namespace:
     """
     Parse args and return the config.
     """
@@ -166,8 +167,9 @@ def get_config(argv):
     parser.add_argument('--create',
                         required=False,
                         action='store_true',
-                        help="Optionally create any destination Discord text channel if it does not"
-                        " exist. Default behavior is to fail if destination channel is missing.")
+                        help="Optionally create any destination Discord text channel if it does"
+                        " not exist. Default behavior is to fail if destination channel is"
+                        " missing.")
 
     parser.add_argument('--src-file',
                         required=False,

@@ -1,4 +1,5 @@
 import logging
+from typing import cast, Optional, Union
 
 import discord
 
@@ -21,13 +22,13 @@ class ParsedMessage():
     this process. Fields tend to be more based on Slack naming conventions, but not precisely, and
     contents may be modified and/or combined. See SlackParser.parse_message() for more details.
     """
-    def __init__(self, text):
+    def __init__(self, text: str) -> None:
         self.text = text
         self.links: list[MessageLink] = []
         self.files: list[MessageFile] = []
 
     @staticmethod
-    def str_or_none(val):
+    def str_or_none(val: Optional[str]) -> str:
         """
         Return a string of a value suitable for a string representation of the form:
            key='value'
@@ -41,7 +42,7 @@ class ParsedMessage():
 
         return f"'{val}'"
 
-    def add_link(self, link_dict):
+    def add_link(self, link_dict: dict[str, str]) -> None:
         """
         Add the info for a link to the parsed message
 
@@ -71,7 +72,7 @@ class ParsedMessage():
 
         self.links.append(link)
 
-    def add_file(self, file_dict):
+    def add_file(self, file_dict: dict[str, str]) -> None:
         """
         Add the info for a file to the parsed message
 
@@ -85,9 +86,9 @@ class ParsedMessage():
         from .parser import SlackParser
 
         file = MessageFile(
-            id=file_dict.get('id'),
-            name=file_dict.get('name'),
-            url=SlackParser.unescape_url(file_dict.get('url_private')),
+            id=file_dict['id'],
+            name=file_dict['name'],
+            url=cast(str, SlackParser.unescape_url(file_dict['url_private'])),
         )
 
         if logger.level == logging.DEBUG:
@@ -97,10 +98,10 @@ class ParsedMessage():
 
         self.files.append(file)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ParsedMessage(text='{self.text}', links={self.links}, files={self.files})"
 
-    def get_discord_send_kwargs(self):
+    def get_discord_send_kwargs(self) -> dict[str, Union[str, Optional[list[discord.Embed]]]]:
         """
         Return the details of the ParsedMessage object as a Discord specific dict of kwargs
 
@@ -146,7 +147,7 @@ class ParsedMessage():
             'embeds': embeds,
         }
 
-    def get_discord_add_files_args(self):
+    def get_discord_add_files_args(self) -> Optional[list[discord.File]]:
         """
         Return the list of MessageFile objects within a ParsedMessage object as a Discord
         specific list of args
@@ -165,8 +166,9 @@ class ParsedMessage():
         if not self.files:
             return None
 
-        return [discord.File(file.local_filename,  # this is the actual file to upload
-                             filename=file.name)   # this is what Discord should call the file
+        return [discord.File(str(file.local_filename),  # this is the actual file to upload
+                                                        #     should be set by now
+                             filename=file.name)        # this is what Discord should call the file
                 for file in self.files
                 if not file.not_found]             # exclude files not found
 
@@ -179,14 +181,16 @@ class MessageLink():
 
     Slack calls a link an 'attachment', Discord calls it an 'Embed'
     """
-    def __init__(self,
-                 title=None,
-                 title_link=None,
-                 text=None,
-                 service_name=None,
-                 service_icon=None,
-                 image_url=None,
-                 thumb_url=None):
+    def __init__(
+            self,
+            title: Optional[str] = None,
+            title_link: Optional[str] = None,
+            text: Optional[str] = None,
+            service_name: Optional[str] = None,
+            service_icon: Optional[str] = None,
+            image_url: Optional[str] = None,
+            thumb_url: Optional[str] = None
+    ) -> None:
         # these are all based on Slack terminology
         self.title = title
         self.title_link = title_link
@@ -196,7 +200,7 @@ class MessageLink():
         self.image_url = image_url
         self.thumb_url = thumb_url
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f"MessageLink(title='{ParsedMessage.str_or_none(self.title)}',"
                 f" title_link='{ParsedMessage.str_or_none(self.title_link)}',"
                 f" text='{ParsedMessage.str_or_none(self.text)}',"
@@ -210,17 +214,17 @@ class MessageFile():
     """
     Properties from an exported Slack message to support an attached file
     """
-    def __init__(self, id, name, url):
+    def __init__(self, id: str, name: str, url: str) -> None:
         self.id = id      # from slack
         self.name = name
         self.url = url    # url_private in slack
         # This will be set later, when the file is downloaded (successfully or not)
-        self.local_filename = None
+        self.local_filename: Optional[str] = None
         # This is set in the special case of the file not found,
         # which the user can optionally ignore.
         self.not_found = False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f"MessageFile(id='{self.id}',"
                 f" name='{self.name}',"
                 f" url='{self.url}',"

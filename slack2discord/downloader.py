@@ -8,6 +8,7 @@ from requests import codes, get, head
 from tqdm import tqdm
 
 from .message import ParsedMessage, MessageFile
+from .parser import MessagesAllChannelsType
 
 
 logger = logging.getLogger(__name__)
@@ -21,12 +22,14 @@ class SlackDownloader():
     Files not found by default raise an error.
     This behavior can be overridden and they can be ignored with ignore_not_found.
     """
-    def __init__(self,
-                 parsed_messages: dict,
-                 downloads_dir: str = None,
-                 ignore_not_found: bool = False):
+    def __init__(
+            self,
+            parsed_messages: MessagesAllChannelsType,
+            downloads_dir: Optional[str] = None,
+            ignore_not_found: bool = False
+    ) -> None:
         # see SlackParser.parse() for details
-        self.parsed_messages = parsed_messages
+        self.parsed_messages: MessagesAllChannelsType = parsed_messages
 
         if downloads_dir is None:
             # second level accuracy is probably sufficient
@@ -45,9 +48,9 @@ class SlackDownloader():
 
         # hold off on creating if it doesn't exist, only create if needed
         # (if parsing includes any files)
-        self.downloads_dir = downloads_dir
+        self.downloads_dir: str = downloads_dir
 
-        self.ignore_not_found = ignore_not_found
+        self.ignore_not_found: bool = ignore_not_found
 
         self.files: list[MessageFile] = []
 
@@ -85,7 +88,7 @@ class SlackDownloader():
                     for thread_message in thread.values():
                         self._add_files(thread_message)
 
-    def _getsize_remote(self, url) -> Optional[int]:
+    def _getsize_remote(self, url: str) -> Optional[int]:
         """
         Return the size of a remote file (assuming that's what's located at the specified HTTP
         URL), in bytes, via the Content-Length HTTP header.  If we are unable to do so, for
@@ -105,7 +108,12 @@ class SlackDownloader():
 
             return int(size)
 
-    def _wget(self, url, filename, ignore_not_found = False) -> bool:
+    def _wget(
+            self,
+            url: str,
+            filename: str,
+            ignore_not_found: bool = False
+    ) -> bool:
         """
         Fetch a file via HTTP GET from the given URL, and store it in the local filename.
 
@@ -136,7 +144,8 @@ class SlackDownloader():
             # All other HTTP errors raise an exception and fail.
             if resp.status_code == codes.not_found:
                 if ignore_not_found:
-                    logger.warning(f"Not found error returned fetching {url} to {filename}, ignoring.")
+                    logger.warning(
+                        f"Not found error returned fetching {url} to {filename}, ignoring.")
                     return False
                 logger.error(f"Not found error returned fetching {url} to {filename}."
                              ' You can ignore all of these with "--ignore-file-not-found".')
@@ -184,10 +193,10 @@ class SlackDownloader():
                 local_size = getsize(file.local_filename)
                 remote_size = self._getsize_remote(file.url)
                 if remote_size and (local_size == remote_size):
-                   logger.debug(f"Skipping URL {file.url} which is covered by already existing"
-                                f" {local_size} byte local file {file.local_filename}")
-                   skipped += 1
-                   continue
+                    logger.debug(f"Skipping URL {file.url} which is covered by already existing"
+                                 f" {local_size} byte local file {file.local_filename}")
+                    skipped += 1
+                    continue
 
             if self._wget(file.url, file.local_filename, self.ignore_not_found):
                 success += 1
