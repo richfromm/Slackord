@@ -1,6 +1,9 @@
 name: python-check
-# XXX I think we eventually want maybe on pull_request, and push just to master
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 jobs:
   check:
     runs-on: ubuntu-latest
