@@ -18,6 +18,11 @@ if [[ $flake8_result -eq 0 ]]; then
    echo "flake8: PASS"
 else
    echo "flake8: FAIL"
+   # will these colorize automatically?
+   echo "Error"
+   echo "ERROR"
+   echo "Warning"
+   echo "WARNING"
    check_result=1
 fi
 
@@ -30,6 +35,11 @@ if [[ $mypy_result -eq 0 ]]; then
    echo "mypy: PASS"
 else
    echo "mypy: FAIL"
+   # will these colorize automatically?
+   echo "Error"
+   echo "ERROR"
+   echo "Warning"
+   echo "WARNING"
    check_result=1
 fi
 
@@ -38,6 +48,11 @@ if [[ $check_result -eq 0 ]]; then
    echo "Union of all checks: PASS"
 else
    echo "Union of all checks: FAIL"
+   # will these colorize automatically?
+   echo "Error"
+   echo "ERROR"
+   echo "Warning"
+   echo "WARNING"
 fi
 
 exit $check_result
