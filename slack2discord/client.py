@@ -30,7 +30,7 @@ class DiscordClient(discord.Client):
             token: str,
             parsed_messages: MessagesAllChannelsType,
             server_name: Optional[str] = None,
-            create_channels: bool = False,
+            create_channels: bool = True,
             verbose: bool = False,
             dry_run: bool = False,
             **kwargs
@@ -198,7 +198,7 @@ class DiscordClient(discord.Client):
             self,
             guild: discord.Guild,
             channel_name: str,
-            create: bool = False,
+            create: bool = True,
             dry_run: bool = False
     ) -> Optional[discord.TextChannel]:
         """
@@ -207,9 +207,9 @@ class DiscordClient(discord.Client):
         Return it, as a discord.TextChannel object.
         https://discordpy.readthedocs.io/en/latest/api.html#textchannel
 
-        Optionally create the channel if it does not exist.
+        Optionally (default) create the channel if it does not exist.
 
-        If the create option is not selected, and the channel does not exist, raise a RuntimeError.
+        If the create option is deselected, and the channel does not exist, raise a RuntimeError.
 
         In the dry run creation case, return None.
         Optional is needed for the return type b/c of the dry run case.
@@ -220,7 +220,7 @@ class DiscordClient(discord.Client):
         if not channels:
             if not create:
                 error_msg = f"Unable to find Discord channel {channel_name}," \
-                    + " use --create to auto create"
+                    + " manually create, or don't use --no-create to allow auto creation"
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
 

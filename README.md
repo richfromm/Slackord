@@ -187,7 +187,7 @@ following manners. This is the order that is searched:
 
 Briefly, the script is executed via:
 
-    ./slack2discord.py [--token TOKEN] [--server SERVER] [--create] \
+    ./slack2discord.py [--token TOKEN] [--server SERVER] [--no-create] \
         [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] [--ignore-file-not-found] \
         [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 

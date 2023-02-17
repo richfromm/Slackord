@@ -16,7 +16,7 @@ DESCRIPTION: str = dedent(
 
 USAGE: str = dedent(
     f"""
-    {argv[0]} [--token TOKEN] [--server SERVER] [--create] \\
+    {argv[0]} [--token TOKEN] [--server SERVER] [--no-create] \\
         [--users-file USERS_FILE] [--downloads-dir DOWNLOADS_DIR] [--ignore-file-not-found] \\
         [-v | --verbose] [-n | --dry-run] <src-and-dest-related-options>
 
@@ -50,8 +50,8 @@ USAGE: str = dedent(
 
     Slack and Discord channel names should **not** include the leading pound sign (#)
 
-    dest Discord channels must already exist. This script will not create channels, it will only
-    post to existing channels.
+    By default, dest Discord channels will be created if they do not already exist. If you want to
+    limit this script to only post to existing channels, use the --no-create option.
     """)
 
 EPILOG: str = dedent(
@@ -164,12 +164,11 @@ def get_config(argv: list[str]) -> Namespace:
                         " is only a member of a single server. Only needed if Discord server"
                         " disambiguation is required.")
 
-    parser.add_argument('--create',
+    parser.add_argument('--no-create',
                         required=False,
                         action='store_true',
-                        help="Optionally create any destination Discord text channel if it does"
-                        " not exist. Default behavior is to fail if destination channel is"
-                        " missing.")
+                        help="Fail if any destination Discord text channel does not exist. Default"
+                        " behavior is to create any missing destination channels.")
 
     parser.add_argument('--src-file',
                         required=False,
