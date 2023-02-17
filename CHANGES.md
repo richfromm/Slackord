@@ -2,6 +2,12 @@
 
 ## Current releases, on [this fork](https://github.com/richfromm/slack2discord)
 
+### 2.8 (in progress)
+
+* Change default behavior to automatically create missing Discord channels
+  ([issue#23](https://github.com/richfromm/slack2discord/issues/23))
+    * Former option `--create` is now `--no-create`
+
 ### 2.7
 
 * Add mypy typing hints

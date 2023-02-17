@@ -54,7 +54,7 @@ if __name__ == '__main__':
         token=config.token,
         parsed_messages=parser.parsed_messages,
         server_name=config.server,
-        create_channels=config.create,
+        create_channels=(not config.no_create),
         verbose=config.verbose,
         dry_run=config.dry_run,
     )
