@@ -2,6 +2,7 @@ import asyncio
 from decorator import decorator
 import logging
 from pprint import pprint
+from re import match
 from traceback import print_exc
 from typing import cast, Callable, NewType, Optional, Union, Sequence
 
@@ -313,6 +314,45 @@ class DiscordClient(discord.Client):
             print_exc()
         finally:
             await self.close()
+
+    @staticmethod
+    def valid_channel_name(channel_name: str) -> bool:
+        """
+        Return a boolean indicating if the input string is a legal Discord channel name.
+
+        The following criteria must be met:
+        * Names must contain only alphanumeric, dash (-), and/or underscore (_) characters
+        * Length must be between 1 and 100 chars (inclusive)
+        * Multiple dashes in a row (e.g. --) are not permitted
+
+        The actual reality of Discord channel creation is a bit more complex. Empirically, there
+        are numerous (undocumented?) cases where an input channel name does **not** fail to create
+        a channel, but the channel created does not have precisely the same name as the input. For
+        example:
+        * Multiple dashes in a row are converted into a single dash
+        * Space and tilde are converted to dash
+        * Tab and newline are removed
+        * All other symbols are removed
+
+        For our purposes, this is too complex to deal with, and we will fail to validate any input
+        that does not result in creating a channel with the same name as the input.
+        """
+        if not match(r'\A[A-Za-z0-9\-_]+\Z', channel_name):
+            logger.error("Discord channel name must contain only alphanumeric,"
+                         f" dash, and/or underscore: {channel_name}")
+            return False
+
+        if not (1 <= len(channel_name) <= 100):
+            logger.error(f"Discord channel name must be between 1 and 100 chars: {channel_name}")
+            return False
+
+        if match('.*--.*', channel_name):
+            logger.error("Discord channel name can not have multiple dashes"
+                         f" in a row: {channel_name}")
+            return False
+
+        # if none of the above problems were found, we're good
+        return True
 
     async def post_messages_to_channel(
             self,
