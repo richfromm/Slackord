@@ -1,4 +1,4 @@
-nose2
+pytest
 mypy
 types-decorator
 types-requests

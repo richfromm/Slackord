@@ -1,8 +1,6 @@
-from unittest import TestCase
-
 from ..client import DiscordClient
 
-class TestDiscordClient(TestCase):
+class TestDiscordClient():
 
     def test_valid_channel_name(self):
         """
@@ -25,7 +23,7 @@ class TestDiscordClient(TestCase):
             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
         ]
         for channel_name in channel_names:
-            self.assertTrue(DiscordClient.valid_channel_name(channel_name))
+            assert DiscordClient.valid_channel_name(channel_name)
 
     def test_invalid_channel_name(self):
         """
@@ -38,4 +36,4 @@ class TestDiscordClient(TestCase):
             "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901",
         ]
         for channel_name in channel_names:
-            self.assertFalse(DiscordClient.valid_channel_name(channel_name))
+            assert not DiscordClient.valid_channel_name(channel_name)
