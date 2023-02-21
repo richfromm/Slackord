@@ -303,8 +303,13 @@ the required dev packages into your virtualenv:
 
     pip install -r requirements-dev.txt
 
-This will allow you to run
-[mypy](https://mypy.readthedocs.io/en/stable/) static typing checks:
+This will allow you to run automated tests via
+[pytest](https://docs.pytest.org/en/latest/):
+
+    pytest
+
+As well as [mypy](https://mypy.readthedocs.io/en/stable/) static
+typing checks:
 
     mypy slack2discord.py
 
@@ -318,7 +323,7 @@ checks:
 
     flake8 slack2discord.py slack2discord
 
-You can automatically run both checks with `./check.sh`. GitHub is configured
+You can automatically run all checks with `./check.sh`. GitHub is configured
 (via `.github/workflows/check.yaml` and [GitHub
 Actions](https://docs.github.com/en/actions)) to automatically run these checks
 on any PRs, to require the checks to pass before merging to `master`, and to
@@ -331,7 +336,7 @@ Some items I am considering:
 * Better error reporting, so that if an entire import is not
   successful, it is easier to resume in a way as to avoid duplicates.
 
-* Add unit tests
+* Add more automated tests
 
 * Ways to optimize file downloads:
     * Download multiple files asynchronously via using

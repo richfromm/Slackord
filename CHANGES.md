@@ -7,6 +7,10 @@
 * Change default behavior to automatically create missing Discord channels
   ([issue#23](https://github.com/richfromm/slack2discord/issues/23))
     * Former option `--create` is now `--no-create`
+* Validate Discord channel names
+  ([issue#24](https://github.com/richfromm/slack2discord/issues/24))
+* Begin adding automated tests, via pytest
+    * These also run automatically in GitHub
 
 ### 2.7
 
