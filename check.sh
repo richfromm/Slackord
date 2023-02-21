@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # this assumes that all project dependencies, as well as all dev dependencies
-# (e.g. flake8 and mypy) have already been installed, e.g. via:
+# (e.g. flake8, mypy, and pytest) have already been installed, e.g. via:
 #    pip install -r requrements.txt
 #    pip install -r requrements-dev.txt
 
 # flake8 and mypy config options are specified in setup.cfg
+# (pytest can be as well, although there is not yet any pytest non-default config)
 
 # colored output: https://www.tutorialspoint.com/how-to-output-colored-text-to-a-linux-terminal
 red="\033[1;31m"
@@ -37,6 +38,18 @@ if [[ $mypy_result -eq 0 ]]; then
    echo -e "mypy: $pass"
 else
    echo -e "mypy: $fail"
+   check_result=1
+fi
+
+echo
+echo "Run pytest tests"
+echo "pytest"
+pytest
+pytest_result=$?
+if [[ $pytest_result -eq 0 ]]; then
+   echo -e "pytest: $pass"
+else
+   echo -e "pytest: $fail"
    check_result=1
 fi
 
