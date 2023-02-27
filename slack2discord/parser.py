@@ -6,6 +6,8 @@ from os.path import basename, dirname, exists, join, isdir, realpath
 from re import match, sub, Match
 from typing import cast, Any, NewType, Optional, Union
 
+# This import moved to within parse() to solve circular import problem
+# from .client import DiscordClient
 from .message import ParsedMessage
 
 
@@ -409,7 +411,22 @@ class SlackParser():
         """
         self.parse_users()
 
+        # populate a map from slack to discord channel names
         self.set_channel_map()
+
+        # validate the discord channel names
+        # this import moved from the top of the file to solve circular import problem
+        from .client import DiscordClient
+        invalid_discord_channels = [discord_channel
+                                    for discord_channel in self.channel_map.values()
+                                    if not DiscordClient.valid_channel_name(discord_channel)]
+        if invalid_discord_channels:
+            fail_msg = f"Discord channel name(s) fail validation: {invalid_discord_channels}"
+            logger.error(fail_msg)
+            logger.info('You can use "--channel-file" to rename Slack channels when migrating.')
+            raise RuntimeError(fail_msg)
+
+        # iterate through the channel map, parsing the channels in the slack export
         for slack_channel, discord_channel in self.channel_map.items():
             self.parse_channel(slack_channel, discord_channel)
 
