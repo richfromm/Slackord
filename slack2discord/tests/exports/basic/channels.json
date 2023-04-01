@@ -1,0 +1,23 @@
+[
+{
+    "id": "C051PJVBPT3",
+    "name": "test-slack2discord",
+    "created": 1680293783,
+    "creator": "U0YLP70AK",
+    "is_archived": false,
+    "is_general": false,
+    "members": [
+        "U0YLP70AK"
+    ],
+    "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+    },
+    "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+    }
+}
+]
