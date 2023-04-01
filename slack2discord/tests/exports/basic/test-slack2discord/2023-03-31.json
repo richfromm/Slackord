@@ -1,0 +1,178 @@
+[
+    {
+        "client_msg_id": "b38eb2b4-f946-4130-b57e-30ea5ab3f0f5",
+        "type": "message",
+        "text": "This is a test of a message that will not be part of a thread.",
+        "user": "U0YLP70AK",
+        "ts": "1680293808.014929",
+        "blocks": [
+            {
+                "type": "rich_text",
+                "block_id": "5UR+W",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "This is a test of a message that will not be part of a thread."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "team": "T0YLDQ0R2",
+        "user_team": "T0YLDQ0R2",
+        "source_team": "T0YLDQ0R2",
+        "user_profile": {
+            "avatar_hash": "ba125b757e63",
+            "image_72": "https:\/\/avatars.slack-edge.com\/2023-02-08\/4787450112193_ba125b757e63f6fe0b03_72.png",
+            "first_name": "Rich",
+            "real_name": "Rich Fromm",
+            "display_name": "rich",
+            "team": "T0YLDQ0R2",
+            "name": "rich",
+            "is_restricted": false,
+            "is_ultra_restricted": false
+        }
+    },
+    {
+        "client_msg_id": "9005fcf3-868d-4160-bf59-f366d02be3f4",
+        "type": "message",
+        "text": "This is a test of a message that will be the root of a thread, with two subsequent messages within the thread.",
+        "user": "U0YLP70AK",
+        "ts": "1680293830.185799",
+        "blocks": [
+            {
+                "type": "rich_text",
+                "block_id": "Dlw",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "This is a test of a message that will be the root of a thread, with two subsequent messages within the thread."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "team": "T0YLDQ0R2",
+        "user_team": "T0YLDQ0R2",
+        "source_team": "T0YLDQ0R2",
+        "user_profile": {
+            "avatar_hash": "ba125b757e63",
+            "image_72": "https:\/\/avatars.slack-edge.com\/2023-02-08\/4787450112193_ba125b757e63f6fe0b03_72.png",
+            "first_name": "Rich",
+            "real_name": "Rich Fromm",
+            "display_name": "rich",
+            "team": "T0YLDQ0R2",
+            "name": "rich",
+            "is_restricted": false,
+            "is_ultra_restricted": false
+        },
+        "thread_ts": "1680293830.185799",
+        "reply_count": 2,
+        "reply_users_count": 1,
+        "latest_reply": "1680293856.796839",
+        "reply_users": [
+            "U0YLP70AK"
+        ],
+        "replies": [
+            {
+                "user": "U0YLP70AK",
+                "ts": "1680293847.058419"
+            },
+            {
+                "user": "U0YLP70AK",
+                "ts": "1680293856.796839"
+            }
+        ],
+        "is_locked": false,
+        "subscribed": true,
+        "last_read": "1680293856.796839"
+    },
+    {
+        "client_msg_id": "acde8312-b565-4b3b-b940-b91caacbd46c",
+        "type": "message",
+        "text": "This is the first of two messages within a thread.",
+        "user": "U0YLP70AK",
+        "ts": "1680293847.058419",
+        "blocks": [
+            {
+                "type": "rich_text",
+                "block_id": "=bdV",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "This is the first of two messages within a thread."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "team": "T0YLDQ0R2",
+        "user_team": "T0YLDQ0R2",
+        "source_team": "T0YLDQ0R2",
+        "user_profile": {
+            "avatar_hash": "ba125b757e63",
+            "image_72": "https:\/\/avatars.slack-edge.com\/2023-02-08\/4787450112193_ba125b757e63f6fe0b03_72.png",
+            "first_name": "Rich",
+            "real_name": "Rich Fromm",
+            "display_name": "rich",
+            "team": "T0YLDQ0R2",
+            "name": "rich",
+            "is_restricted": false,
+            "is_ultra_restricted": false
+        },
+        "thread_ts": "1680293830.185799",
+        "parent_user_id": "U0YLP70AK"
+    },
+    {
+        "client_msg_id": "cd1e11c1-da72-44e8-ab35-3ca7a9cc878c",
+        "type": "message",
+        "text": "This is the second of two messages within a thread.",
+        "user": "U0YLP70AK",
+        "ts": "1680293856.796839",
+        "blocks": [
+            {
+                "type": "rich_text",
+                "block_id": "Yd+K",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "This is the second of two messages within a thread."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "team": "T0YLDQ0R2",
+        "user_team": "T0YLDQ0R2",
+        "source_team": "T0YLDQ0R2",
+        "user_profile": {
+            "avatar_hash": "ba125b757e63",
+            "image_72": "https:\/\/avatars.slack-edge.com\/2023-02-08\/4787450112193_ba125b757e63f6fe0b03_72.png",
+            "first_name": "Rich",
+            "real_name": "Rich Fromm",
+            "display_name": "rich",
+            "team": "T0YLDQ0R2",
+            "name": "rich",
+            "is_restricted": false,
+            "is_ultra_restricted": false
+        },
+        "thread_ts": "1680293830.185799",
+        "parent_user_id": "U0YLP70AK"
+    }
+]
